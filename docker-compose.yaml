@@ -1,0 +1,46 @@
+services:
+  openpose:
+    build:
+      context: ./api/openpose
+    image: openpose:latest
+    container_name: openpose
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - data:/data
+  smplify-x:
+    build:
+      context: ./api/smplify-x
+    image: smplify-x:latest
+    container_name: smplify-x
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - data:/data
+  blender:
+    build:
+      context: ./api/blender
+    image: blender:latest
+    container_name: blender
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - data:/data
+  backend:
+    build:
+      context: ./api/app
+    image: backend:latest
+    container_name: backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
+
+volumes:
+  data:
+    driver: local

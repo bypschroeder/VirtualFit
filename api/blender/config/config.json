@@ -1,0 +1,12 @@
+{
+    "export":
+        {
+            "img_format": "PNG",
+            "img_type": "FULL",
+            "transparent_bg": true,
+            "resolution_x": 1080,
+            "resolution_y": 1080,
+            "3D_format": "OBJ",
+            "3D_type": "FULL"
+        }
+}

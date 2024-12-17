@@ -1,0 +1,24 @@
+{
+    "T-Shirt":
+        {
+            "quality": 8,
+            "time_scale": 1,
+            "mass": 0.2,
+            "air_damping": 1,
+            "tension_stiffness": 15,
+            "compression_stiffness": 15,
+            "shear_stiffness": 15,
+            "bending_stiffness": 0.500,
+            "tension_damping": 5,
+            "compression_damping": 5,
+            "shear_damping": 5,
+            "bending_damping": 0.500,
+            "vertex_group_mass": null,
+            "pin_stiffness": 0,
+            "shrink_min": 0,
+            "collision_quality": 4,
+            "distance_min": 0.017,
+            "use_self_collision": true,
+            "self_distance_min": 0.001
+        }
+}
