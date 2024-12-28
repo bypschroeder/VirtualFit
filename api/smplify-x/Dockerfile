@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 && \
     apt-get clean
 
+RUN git config --global http.postBuffer 1048576000 && git config --global https.postBuffer 1048576000
+
 WORKDIR /smplx
 RUN pip3 install --no-cache-dir chumpy smplx[all] \
     git+https://github.com/nghorbani/configer 
