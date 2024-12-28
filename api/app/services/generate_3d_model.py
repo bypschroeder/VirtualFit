@@ -86,15 +86,31 @@ def shape_obj_smooth(obj_file_path, client, volume, volume_bind):
         if not os.path.exists(obj_file_path):
             return False
 
-        client.containers.run(
+        container = client.containers.run(
             "blender",
             device_requests=[
                 docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
             ],
             command=(f"blender -b -P shade_smooth.py -- --obj {obj_file_path}"),
-            remove=True,
             volumes={volume: {"bind": volume_bind, "mode": "rw"}},
         )
+
+        container.wait()
+
+        volume_names = []
+        container_info = client.api.inspect_container(container.id)
+        for mount in container_info["Mounts"]:
+            if mount["Type"] == "volume":
+                volume_names.append(mount["Name"])
+
+        container.remove(force=True)
+
+        for volume_name in volume_names:
+            try:
+                client.volumes.get(volume_name).remove()
+                print(f"Volume '{volume_name}' removed successfully.")
+            except Exception as e:
+                print(f"Failed to remove volume '{volume_name}': {e}")
 
         return True
     except docker.errors.ImageNotFound:

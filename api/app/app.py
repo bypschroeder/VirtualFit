@@ -1,10 +1,15 @@
 import docker
 import os
 import time
-from flask import Flask, request, jsonify, send_file
-from services.generate_3d_model import generate_keypoints, generate_mesh, shape_obj_smooth
+from flask import Flask, request, jsonify, send_file, after_this_request
+from services.generate_3d_model import (
+    generate_keypoints,
+    generate_mesh,
+    shape_obj_smooth,
+)
 from services.uptime import format_uptime
 from flask_cors import CORS
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +20,7 @@ app.config.from_object("config")
 
 server_start_time = time.time()
 
+
 @app.route("/")
 def index():
     current_time = time.time()
@@ -23,76 +29,90 @@ def index():
 
     status = "running"
 
-    return jsonify({
-        "status": status,
-        "uptime": uptime
-    })
+    return jsonify({"status": status, "uptime": uptime})
 
-@app.route('/generate-3d-model', methods=['POST'])
+
+@app.route("/generate-3d-model", methods=["POST"])
 def generate_3d_model():
     try:
         if "gender" not in request.form:
-            return jsonify({'error': 'No gender provided'}), 400
-        
-        gender = request.form['gender']
-        if gender not in ['male', 'neutral', 'female']:
-            return jsonify({'error': 'Invalid gender provided'}), 400
-        
-        if "image" not in request.files:
-            return jsonify({'error': 'No image file provided'}), 400
-        
-        image_file = request.files['image']
+            return jsonify({"error": "No gender provided"}), 400
 
-        if image_file.filename == '':
-            return jsonify({'error': 'No image file provided'}), 400
-        
-        images_folder = os.path.join(app.config['DATA_FOLDER'], 'images')
+        gender = request.form["gender"]
+        if gender not in ["male", "neutral", "female"]:
+            return jsonify({"error": "Invalid gender provided"}), 400
+
+        if "image" not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+
+        image_file = request.files["image"]
+
+        if image_file.filename == "":
+            return jsonify({"error": "No image file provided"}), 400
+
+        images_folder = os.path.join(app.config["DATA_FOLDER"], "images")
         os.makedirs(images_folder, exist_ok=True)
-        
+
         image_path = os.path.join(images_folder, "sample.jpg")
         image_file.save(image_path)
 
         if not generate_keypoints(
-            client, 
-            app.config['DATA_FOLDER'],
-            app.config['VOLUME'],
-            app.config['VOLUME_BIND']
+            client,
+            app.config["DATA_FOLDER"],
+            app.config["VOLUME"],
+            app.config["VOLUME_BIND"],
         ):
-            return jsonify({'error': 'Failed to generate keypoints'}), 400
-        
+            return jsonify({"error": "Failed to generate keypoints"}), 400
+
         if not generate_mesh(
             gender,
-            client, 
-            app.config['DATA_FOLDER'],
-            app.config['VOLUME'],
-            app.config['VOLUME_BIND']
+            client,
+            app.config["DATA_FOLDER"],
+            app.config["VOLUME"],
+            app.config["VOLUME_BIND"],
         ):
-            return jsonify({'error': 'Failed to generate mesh'}), 400
-        
-        obj_folder = os.path.join(app.config['DATA_FOLDER'], 'smplify-x_results', 'meshes', 'sample')
+            return jsonify({"error": "Failed to generate mesh"}), 400
+
+        obj_folder = os.path.join(
+            app.config["DATA_FOLDER"], "smplify-x_results", "meshes", "sample"
+        )
 
         if not shape_obj_smooth(
-            os.path.join(obj_folder, '000.obj'),
-            client, 
-            app.config['VOLUME'], 
-            app.config['VOLUME_BIND']
+            os.path.join(obj_folder, "000.obj"),
+            client,
+            app.config["VOLUME"],
+            app.config["VOLUME_BIND"],
         ):
-            return jsonify({'error': 'Failed to shape smooth 3d Model'}), 400
-    
-        smooth_obj = os.path.join(obj_folder, '000_smooth.obj')
+            return jsonify({"error": "Failed to shape smooth 3d Model"}), 400
+
+        smooth_obj = os.path.join(obj_folder, "000_smooth.obj")
 
         if not os.path.exists(smooth_obj):
-            return jsonify({'error': 'Failed to shape smooth 3d Model'}), 400
-        
+            return jsonify({"error": "Failed to shape smooth 3d Model"}), 400
+
         try:
             os.remove(image_path)
         except Exception as e:
             print(f"Failed to cleanup temporary image file: {e}")
 
+        @after_this_request
+        def cleanup(response):
+            try:
+                for filename in os.listdir(app.config["DATA_FOLDER"]):
+                    file_path = os.path.join(app.config["DATA_FOLDER"], filename)
+                    if os.path.isfile(file_path) or os.path.islink(file_path):
+                        os.unlink(file_path)
+                    elif os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+            except Exception as e:
+                print(f"Cleanup failed: {e}")
+            return response
+
         return send_file(smooth_obj, as_attachment=True)
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
-        return jsonify({'error': e}), 500
+        return jsonify({"error": e}), 500
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000, debug=True)
