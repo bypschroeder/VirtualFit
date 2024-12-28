@@ -93,6 +93,7 @@ def shape_obj_smooth(obj_file_path, client, volume, volume_bind):
             ],
             command=(f"blender -b -P shade_smooth.py -- --obj {obj_file_path}"),
             volumes={volume: {"bind": volume_bind, "mode": "rw"}},
+            detach=True,
         )
 
         container.wait()
@@ -106,11 +107,16 @@ def shape_obj_smooth(obj_file_path, client, volume, volume_bind):
         container.remove(force=True)
 
         for volume_name in volume_names:
-            try:
-                client.volumes.get(volume_name).remove()
-                print(f"Volume '{volume_name}' removed successfully.")
-            except Exception as e:
-                print(f"Failed to remove volume '{volume_name}': {e}")
+            if volume_name != "virtualfit_data":
+                try:
+                    client.volumes.get(volume_name).remove()
+                    print(f"Volume {volume_name} removed.")
+                except Exception as e:
+                    print(f"Failed to remove volume {volume_name}: {e}")
+            else:
+                print(
+                    f"Skipping removal of volume '{volume_name}' as it is 'virtualfit_data'."
+                )
 
         return True
     except docker.errors.ImageNotFound:
