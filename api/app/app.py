@@ -4,8 +4,10 @@ import time
 from flask import Flask, request, jsonify, send_file
 from services.generate_3d_model import generate_keypoints, generate_mesh, shape_obj_smooth
 from services.uptime import format_uptime
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 client = docker.from_env()
 
