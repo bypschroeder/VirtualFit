@@ -2,6 +2,7 @@ import bpy
 import os
 import sys
 
+
 # Add all subdirectories of the script directory to the system path so Blender can find the modules
 def add_subdirs_to_sys_path(root_dir):
     for dirpath, dirnames, filenames in os.walk(root_dir):
@@ -9,12 +10,19 @@ def add_subdirs_to_sys_path(root_dir):
             continue
         sys.path.append(dirpath)
 
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 add_subdirs_to_sys_path(script_dir)
 
 from config.config_loader import load_config
 from _helpers.ArgumentParserForBlender import ArgumentParserForBlender
-from _helpers.scene import setup_scene, clear_scene, snap_to_ground_plane, apply_all_transforms, scale_obj
+from _helpers.scene import (
+    setup_scene,
+    clear_scene,
+    snap_to_ground_plane,
+    apply_all_transforms,
+    scale_obj,
+)
 from smpl.avatar import import_obj, join_as_shapes, animate_shape_key
 from clothing.fit_garment import add_garment, set_cloth, bake_cloth, post_process
 from _helpers.export import export_img, export_3D
@@ -29,8 +37,12 @@ bpy.context.preferences.view.show_splash = False
 parser = ArgumentParserForBlender()
 parser.add_argument("--gender", type=str, required=True, help="Gender of the avatar")
 parser.add_argument("--obj", type=str, required=True, help="Path to the .obj file")
-parser.add_argument("--garment", type=str, required=True, help="Path to the .blend file of the garment")
-parser.add_argument("--output", type=str, required=True, help="Path to the output directory")
+parser.add_argument(
+    "--garment", type=str, required=True, help="Path to the .blend file of the garment"
+)
+parser.add_argument(
+    "--output", type=str, required=True, help="Path to the output directory"
+)
 args = parser.parse_args()
 
 gender = args.gender
@@ -45,7 +57,11 @@ if not os.path.exists(garment_filepath):
 
 # Setup scene
 clear_scene()
-setup_scene()
+setup_scene(
+    camera_location=(0, -34, -10.5),
+    camera_rotation=(90, 0, 0),
+    light_rotation=(90, 0, 0),
+)
 
 # Create avatar and animate to generated obj
 avatar = import_obj(f"./smpl/base_mesh/{gender}.obj")
@@ -72,7 +88,12 @@ post_process(garment, -0.1, 2)
 # Export
 os.makedirs(output_dir, exist_ok=True)
 render_path = os.path.join(output_dir, f"{garment_name}_{gender}.png")
-export_img(render_path, config["export"]["img_format"] ,config["export"]["img_type"], config["export"]["transparent_bg"])
+export_img(
+    render_path,
+    config["export"]["img_format"],
+    config["export"]["img_type"],
+    config["export"]["transparent_bg"],
+)
 
 format = config["export"]["3D_format"]
 type = config["export"]["3D_type"]

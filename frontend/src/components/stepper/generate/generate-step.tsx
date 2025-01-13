@@ -50,7 +50,7 @@ const GenerateStep = () => {
 			// formData.append("height", String(values.height));
 			// formData.append("weight", String(values.weight));
 			setIsGenerating(true);
-			const response = await fetch("http://localhost:3000/generate-3d-model", {
+			const response = await fetch("http://api.localhost/generate-3d-model", {
 				method: "POST",
 				body: formData,
 			});

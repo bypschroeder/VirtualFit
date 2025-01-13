@@ -1,9 +1,12 @@
+import { generateSchema } from "@/schemas";
 import useImageStore from "@/store/useImageStore";
 import { UploadIcon } from "lucide-react";
 import { ChangeEvent } from "react";
+import { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 
 interface ImageUploaderProps {
-	form: any; // TODO: Fix Form type
+	form: UseFormReturn<z.infer<typeof generateSchema>>;
 }
 
 const ImageUploader = ({ form }: ImageUploaderProps) => {
@@ -12,6 +15,12 @@ const ImageUploader = ({ form }: ImageUploaderProps) => {
 	const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
 		if (file) {
+			const maxSizeInBytes = 1024 * 1024 * 5; // 5MB
+			if (file.size > maxSizeInBytes) {
+				alert("Image size exceeds 5MB");
+				return;
+			}
+
 			const reader = new FileReader();
 			reader.onload = () => {
 				if (typeof reader.result === "string") {

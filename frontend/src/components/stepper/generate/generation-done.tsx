@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { generateSchema } from "@/schemas";
 import useFormStore from "@/store/useFormStore";
 import useGenerationStore from "@/store/useGenerationStore";
 import useImageStore from "@/store/useImageStore";
 import useObjStore from "@/store/useObjStore";
 import { Download, RotateCcw } from "lucide-react";
+import { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 
 interface GenerationDoneProps {
-	form: any; // TODO: Fix form type
+	form: UseFormReturn<z.infer<typeof generateSchema>>;
 }
 
 const GenerationDone = ({ form }: GenerationDoneProps) => {

@@ -5,9 +5,9 @@ import App from "./App.tsx";
 import { CameraProvider } from "./components/ui/camera/camera-provider.tsx";
 
 createRoot(document.getElementById("root")!).render(
-	<StrictMode>
-		<CameraProvider>
-			<App />
-		</CameraProvider>
-	</StrictMode>
+	// <StrictMode>
+	<CameraProvider>
+		<App />
+	</CameraProvider>
+	// </StrictMode>
 );

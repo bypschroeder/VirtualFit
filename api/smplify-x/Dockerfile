@@ -32,3 +32,6 @@ RUN git clone https://github.com/KyujinHan/Smplify-X-Perfect-Implementation . &&
     pip3 install -r requirements.txt || true
 
 RUN pip3 install --no-cache-dir configargparse omegaconf loguru git+https://github.com/nghorbani/human_body_prior
+
+COPY . /smplify-x/
+RUN pip3 install minio

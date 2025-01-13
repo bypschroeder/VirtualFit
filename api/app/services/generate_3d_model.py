@@ -2,68 +2,31 @@ import os
 import docker
 import docker.errors
 import docker.types
+from minio.error import S3Error
+from urllib.parse import unquote
 
 
-def generate_keypoints(client, data_folder, volume, volume_bind):
+def generate_keypoints(docker_client, s3_client, bucket_name, image_key):
     try:
-        if not os.path.exists(f"{data_folder}/images"):
-            print("The 'images' folder does not exist.")
+        try:
+            s3_client.stat_object(bucket_name, image_key)
+        except S3Error as e:
+            print(f"Image file {image_key} no found in bucket {bucket_name}: {e}")
             return False
 
-        client.containers.run(
-            "openpose",
+        docker_client.containers.run(
+            "openpose:latest",
             device_requests=[
                 docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
             ],
-            command=(
-                f"/openpose/build/examples/openpose/openpose.bin "
-                f"--image_dir {data_folder}/images "
-                f"--write_json {data_folder}/keypoints "
-                f"--face --hand --display 0 --render_pose 0"
-            ),
+            command=(f"python3 generate_keypoints.py {bucket_name} {image_key}"),
+            network="virtualfit_app-network",
             remove=True,
-            volumes={volume: {"bind": volume_bind, "mode": "rw"}},
-        )
-
-        return True
-    except docker.errors.ImageNotFound:
-        print("The specified Docker image 'openpose' was not found.")
-        return False
-    except docker.errors.NotFound as e:
-        print(f"Resource not found: {e}")
-        return False
-    except docker.errors.APIError as e:
-        print(f"Docker API error: {e}")
-        return False
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return False
-
-
-def generate_mesh(gender, client, data_folder, volume, volume_bind):
-    try:
-        if not os.path.exists(f"{data_folder}/keypoints"):
-            print("The 'keypoints' folder does not exist.")
-            return False
-
-        client.containers.run(
-            "smplify-x",
-            device_requests=[
-                docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
-            ],
-            command=(
-                f"python3 smplifyx/main.py "
-                f"--config cfg_files/fit_smplx.yaml "
-                f"--data_folder {data_folder} "
-                f"--output_folder {data_folder}/smplify-x_results "
-                f"--visualize=False "
-                f"--gender={gender} "
-                f"--model_folder ../smplx/models "
-                f"--vposer_ckpt ../vposer/V02_05 "
-                f"--part_segm_fn smplx_parts_segm.pkl"
-            ),
-            remove=True,
-            volumes={volume: {"bind": volume_bind, "mode": "rw"}},
+            environment={
+                "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT"),
+                "MINIO_ACCESS_KEY": os.getenv("MINIO_ACCESS_KEY"),
+                "MINIO_SECRET_KEY": os.getenv("MINIO_SECRET_KEY"),
+            },
         )
 
         return True
@@ -81,25 +44,80 @@ def generate_mesh(gender, client, data_folder, volume, volume_bind):
         return False
 
 
-def shape_obj_smooth(obj_file_path, client, volume, volume_bind):
+def generate_mesh(
+    docker_client, s3_client, bucket_name, image_key, keypoints_key, gender
+):
     try:
-        if not os.path.exists(obj_file_path):
+        try:
+            s3_client.stat_object(bucket_name, keypoints_key)
+            s3_client.stat_object(bucket_name, image_key)
+        except S3Error as e:
+            print(
+                f"Keypoints file {keypoints_key} or image file {image_key} not found in bucket {bucket_name}: {e}"
+            )
             return False
 
-        container = client.containers.run(
-            "blender",
+        docker_client.containers.run(
+            "smplify-x:latest",
             device_requests=[
                 docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
             ],
-            command=(f"blender -b -P shade_smooth.py -- --obj {obj_file_path}"),
-            volumes={volume: {"bind": volume_bind, "mode": "rw"}},
+            command=(
+                f"python3 generate_mesh.py {bucket_name} {image_key} {keypoints_key} {gender}"
+            ),
+            network="virtualfit_app-network",
+            remove=True,
+            environment={
+                "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT"),
+                "MINIO_ACCESS_KEY": os.getenv("MINIO_ACCESS_KEY"),
+                "MINIO_SECRET_KEY": os.getenv("MINIO_SECRET_KEY"),
+            },
+        )
+
+        return True
+    except docker.errors.ImageNotFound:
+        print("The specified Docker image 'smplify-x' was not found.")
+        return False
+    except docker.errors.NotFound as e:
+        print(f"Resource not found: {e}")
+        return False
+    except docker.errors.APIError as e:
+        print(f"Docker API error: {e}")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return False
+
+
+def shape_obj_smooth(docker_client, s3_client, bucket_name, obj_key):
+    try:
+        try:
+            s3_client.stat_object(bucket_name, obj_key)
+        except S3Error as e:
+            print(f"OBJ file {obj_key} not found in bucket {bucket_name}: {e}")
+            return False
+
+        container = docker_client.containers.run(
+            "blender:latest",
+            device_requests=[
+                docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])
+            ],
+            command=(
+                f"python3 ./minio_helpers/fetch_shade_smooth.py {bucket_name} {obj_key}"
+            ),
+            network="virtualfit_app-network",
             detach=True,
+            environment={
+                "MINIO_ENDPOINT": os.getenv("MINIO_ENDPOINT"),
+                "MINIO_ACCESS_KEY": os.getenv("MINIO_ACCESS_KEY"),
+                "MINIO_SECRET_KEY": os.getenv("MINIO_SECRET_KEY"),
+            },
         )
 
         container.wait()
 
         volume_names = []
-        container_info = client.api.inspect_container(container.id)
+        container_info = docker_client.api.inspect_container(container.id)
         for mount in container_info["Mounts"]:
             if mount["Type"] == "volume":
                 volume_names.append(mount["Name"])
@@ -107,9 +125,9 @@ def shape_obj_smooth(obj_file_path, client, volume, volume_bind):
         container.remove(force=True)
 
         for volume_name in volume_names:
-            if volume_name != "virtualfit_data":
+            if volume_name != "virtualfit_minio-data":
                 try:
-                    client.volumes.get(volume_name).remove()
+                    docker_client.volumes.get(volume_name).remove()
                     print(f"Volume {volume_name} removed.")
                 except Exception as e:
                     print(f"Failed to remove volume {volume_name}: {e}")

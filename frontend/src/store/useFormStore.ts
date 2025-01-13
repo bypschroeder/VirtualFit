@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
 interface FormState {
-	gender: "male" | "female" | "neutral" | undefined;
+	gender: "male" | "female" | undefined;
 	height: number;
 	weight: number;
-	setGender: (gender: "male" | "female" | "neutral" | undefined) => void;
+	setGender: (gender: "male" | "female" | undefined) => void;
 	setHeight: (height: number) => void;
 	setWeight: (weight: number) => void;
 }

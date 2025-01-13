@@ -1,7 +1,12 @@
 import bpy
 import json
+import os
+
 
 def add_garment(garment_filepath, obj_name):
+    if not os.path.exists(garment_filepath):
+        raise FileNotFoundError(f"File {garment_filepath} not found.")
+
     with bpy.data.libraries.load(garment_filepath, link=False) as (data_from, data_to):
         if obj_name in data_from.objects:
             data_to.objects.append(obj_name)
@@ -15,6 +20,7 @@ def add_garment(garment_filepath, obj_name):
         raise ValueError(f"Object {obj_name} not found.")
 
     return obj
+
 
 def set_cloth(garment, garment_type):
     with open("./clothing/cloth_config.json", "r") as f:
@@ -52,6 +58,7 @@ def set_cloth(garment, garment_type):
     collision_settings.use_self_collision = garment_config["use_self_collision"]
     collision_settings.self_distance_min = garment_config["self_distance_min"]
 
+
 def bake_cloth(start_frame, end_frame):
     for scene in bpy.data.scenes:
         for object in scene.objects:
@@ -59,15 +66,19 @@ def bake_cloth(start_frame, end_frame):
                 if modifier.type == "CLOTH":
                     modifier.point_cache.frame_start = start_frame
                     modifier.point_cache.frame_end = end_frame
-                    with bpy.context.temp_override(scene=scene,
-                                                   active_object=object,
-                                                   point_cache=modifier.point_cache):
+                    with bpy.context.temp_override(
+                        scene=scene,
+                        active_object=object,
+                        point_cache=modifier.point_cache,
+                    ):
                         bpy.ops.ptcache.bake(bake=True)
     bpy.context.scene.frame_current = end_frame
 
+
 def post_process(obj, thickness, levels):
     bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.modifier_apply(modifier="Cloth")
+    if obj.modifiers.get("Cloth"):
+        bpy.ops.object.modifier_apply(modifier="Cloth")
 
     solidify = obj.modifiers.new(name="Solidify", type="SOLIDIFY")
     solidify.thickness = thickness

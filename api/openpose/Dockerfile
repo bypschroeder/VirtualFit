@@ -3,6 +3,8 @@ FROM nvidia/cuda:11.6.1-cudnn8-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-dev \
+    python3-pip \
     git \
     g++ \
     wget \
@@ -30,6 +32,8 @@ ENV PATH="/usr/local/cmake-3.13.0-Linux-x86_64/bin:${PATH}"
 
 WORKDIR /openpose
 RUN git clone --depth 1 https://github.com/CMU-Perceptual-Computing-Lab/openpose.git .
+COPY . /openpose/
+RUN pip3 install minio
 
 RUN wget -O /openpose/models/hand/pose_iter_102000.caffemodel "https://www.dropbox.com/scl/fi/the6q2tj5m215cxq85mko/pose_iter_102000.caffemodel?rlkey=hiasv5euzdg1gzyda5h7fcwvi&st=96mbr3af&dl=1"  && \
     wget -O /openpose/models/pose/body_25/pose_iter_584000.caffemodel "https://www.dropbox.com/scl/fi/pfl1nonefgd2r3w42e2ij/pose_iter_584000.caffemodel?rlkey=hnj53tdg47d4fzgm9fz967tnb&st=hsgm207a&dl=1" && \

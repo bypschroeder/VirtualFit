@@ -18,13 +18,16 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { generateSchema } from "@/schemas";
 import useImageStore from "@/store/useImageStore";
 import { CameraIcon, Info, Timer } from "lucide-react";
 import { useRef, useState } from "react";
+import { UseFormReturn } from "react-hook-form";
 import Webcam from "react-webcam";
+import { z } from "zod";
 
 interface ImageCaptureProps {
-	form: any; // TODO: Fix form type
+	form: UseFormReturn<z.infer<typeof generateSchema>>;
 }
 
 const ImageCapture = ({ form }: ImageCaptureProps) => {
@@ -46,7 +49,6 @@ const ImageCapture = ({ form }: ImageCaptureProps) => {
 			setCountdown(currentCountdown);
 
 			const countdownInterval = setInterval(() => {
-				console.log(currentCountdown);
 				currentCountdown--;
 				setCountdown(currentCountdown);
 

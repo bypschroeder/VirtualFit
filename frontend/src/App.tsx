@@ -1,5 +1,4 @@
 import { defineStepper } from "@stepperize/react";
-import { useEffect } from "react";
 import Footer from "./components/footer";
 import Header from "./components/header";
 import ModelViewer from "./components/model-viewer";
@@ -17,10 +16,6 @@ function App() {
 	const stepper = useStepper();
 
 	const obj = useObjStore((state) => state.obj);
-
-	useEffect(() => {
-		console.log(obj);
-	}, [obj]);
 
 	return (
 		<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">

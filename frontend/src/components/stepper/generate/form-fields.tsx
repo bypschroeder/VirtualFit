@@ -13,20 +13,24 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { generateSchema } from "@/schemas";
 import useGenerationStore from "@/store/useGenerationStore";
 import { useEffect, useState } from "react";
+import { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 
 interface FormFieldsProps {
-	form: any; // TODO: Fix form type
+	form: UseFormReturn<z.infer<typeof generateSchema>>;
 }
 
 const FormFields = ({ form }: FormFieldsProps) => {
 	const { isGenerating, generatingDone } = useGenerationStore();
 
-	const [selectValue, setSelectValue] = useState<"male" | "female" | "neutral">(
+	const [selectValue, setSelectValue] = useState<"male" | "female">(
 		form.getValues("gender")
 	);
 
+	// FIXME: Select doesnt reset when not going next
 	useEffect(() => {
 		setSelectValue(form.getValues("gender"));
 	}, [form, form.getValues("gender")]);
@@ -39,7 +43,7 @@ const FormFields = ({ form }: FormFieldsProps) => {
 					<FormItem className="w-full">
 						<FormLabel>Gender</FormLabel>
 						<Select
-							onValueChange={(value: "male" | "female" | "neutral") => {
+							onValueChange={(value: "male" | "female") => {
 								field.onChange(value);
 								setSelectValue(value);
 							}}
@@ -53,7 +57,6 @@ const FormFields = ({ form }: FormFieldsProps) => {
 							</FormControl>
 							<SelectContent>
 								<SelectItem value="male">Male</SelectItem>
-								<SelectItem value="neutral">Neutral</SelectItem>
 								<SelectItem value="female">Female</SelectItem>
 							</SelectContent>
 						</Select>

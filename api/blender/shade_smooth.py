@@ -2,12 +2,14 @@ import bpy
 import os
 import sys
 
+
 # Add all subdirectories of the script directory to the system path so Blender can find the modules
 def add_subdirs_to_sys_path(root_dir):
     for dirpath, dirnames, filenames in os.walk(root_dir):
         if os.path.basename(dirpath) == "__pycache__":
             continue
         sys.path.append(dirpath)
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 add_subdirs_to_sys_path(script_dir)
@@ -27,7 +29,6 @@ parser.add_argument("--obj", type=str, required=True, help="Path to the .obj fil
 args = parser.parse_args()
 
 obj_filepath = args.obj
-
 if not os.path.exists(obj_filepath):
     raise FileNotFoundError(f"File {obj_filepath} not found.")
 
@@ -41,5 +42,5 @@ for f in mesh.polygons:
 
 format = config["export"]["3D_format"]
 type = config["export"]["3D_type"]
-obj_path = obj_filepath.replace(".obj", "_smooth.obj")
-export_3D(obj_path, format, type)
+smooth_obj_path = obj_filepath.replace(".obj", "_smooth.obj")
+export_3D(smooth_obj_path, format, type)
