@@ -8,8 +8,15 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { tryonSchema } from "@/schemas";
+import useFitObjStore from "@/store/useFitObjStore";
 import useFormStore from "@/store/useFormStore";
+import useObjStore from "@/store/useObjStore";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type ClothingType = "t-shirt" | "sweatshirt" | "hoodie" | "pants";
 
@@ -26,15 +33,12 @@ interface PreviewFile {
 }
 
 const TryOnStep = () => {
-	const [selectedItem, setSelectedItem] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [previewFiles, setPreviewFiles] = useState<PreviewFile[]>([]);
 
 	const { gender } = useFormStore();
-
-	const handleSelectItem = (itemName: string) => {
-		setSelectedItem(itemName);
-	};
+	const { obj } = useObjStore();
+	const { setFitObj } = useFitObjStore();
 
 	useEffect(() => {
 		const fetchPreviews = async () => {
@@ -105,6 +109,53 @@ const TryOnStep = () => {
 		},
 	];
 
+	const form = useForm<z.infer<typeof tryonSchema>>({
+		resolver: zodResolver(tryonSchema),
+		defaultValues: {
+			obj: undefined,
+			garment: undefined,
+			gender: gender,
+			size: "M",
+		},
+	});
+
+	useEffect(() => {
+		if (obj) {
+			const objBlob = new Blob([obj], { type: "application/octet-stream" });
+			const objFile = new File([objBlob], "model.obj", {
+				type: "application/octet-stream",
+			});
+
+			form.setValue("obj", objFile);
+		}
+	}, [obj, form]);
+
+	const onSubmit = async (values: z.infer<typeof tryonSchema>) => {
+		setFitObj(null);
+		try {
+			const formData = new FormData();
+			formData.append("obj", values.obj);
+			formData.append("garment", values.garment);
+			formData.append("gender", values.gender);
+			formData.append("size", values.size);
+
+			const response = await fetch("http://api.localhost/try-on", {
+				method: "POST",
+				body: formData,
+			});
+
+			if (!response.ok) {
+				throw new Error(`Error: ${response.status} - ${response.statusText}`);
+			}
+
+			const fitObj = await response.text();
+
+			setFitObj(fitObj);
+		} catch (error) {
+			console.error("Error generating the virutal fit", error);
+		}
+	};
+
 	if (loading) {
 		return (
 			<Card className="flex justify-center items-center h-full">
@@ -116,54 +167,74 @@ const TryOnStep = () => {
 	}
 
 	return (
-		<Card className="flex flex-col justify-center items-center h-full">
-			<CardContent className="py-4 w-full h-full">
-				<Accordion
-					type="single"
-					defaultValue={categories[0].type}
-					collapsible
-					className="flex flex-col items-center gap-4 w-full h-full jusify-center"
-				>
-					{categories.map((category) => (
-						<AccordionItem
-							className="w-full"
-							key={category.type}
-							value={category.type}
+		<Form {...form}>
+			<form
+				onSubmit={form.handleSubmit(onSubmit)}
+				className="flex flex-col gap-4 h-full"
+			>
+				<Card className="flex flex-col justify-center items-center h-full">
+					<CardContent className="py-4 w-full h-full">
+						<Accordion
+							type="single"
+							defaultValue={categories[0].type}
+							collapsible
+							className="flex flex-col items-center gap-4 w-full h-full jusify-center"
 						>
-							<AccordionTrigger className="w-full">
-								{category.type.charAt(0).toUpperCase() + category.type.slice(1)}
-							</AccordionTrigger>
-							{/* TODO: ScrollArea instead of overflow-y-scroll */}
-							<AccordionContent className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-h-[20rem] overflow-y-scroll">
-								{category.items.map((item) => (
-									<Card
-										key={item.name}
-										className={`w-full h-full cursor-pointer ${
-											selectedItem === item.name
-												? "bg-primary/10 border-primary"
-												: ""
-										}`}
-										onClick={() => handleSelectItem(item.name)}
-									>
-										<CardContent className="p-2">
-											<img
-												src={item.path}
-												alt={item.name}
-												className="w-full h-full object-cover"
-											/>
-										</CardContent>
-									</Card>
-								))}
-							</AccordionContent>
-						</AccordionItem>
-					))}
-				</Accordion>
-			</CardContent>
-			<CardFooter className="flex flex-col justify-center items-center gap-6">
-				<SizePicker />
-				<Button size={"lg"}>Try on</Button>
-			</CardFooter>
-		</Card>
+							{categories.map((category) => (
+								<AccordionItem
+									className="w-full"
+									key={category.type}
+									value={category.type}
+								>
+									<AccordionTrigger className="w-full">
+										{category.type.charAt(0).toUpperCase() +
+											category.type.slice(1)}
+									</AccordionTrigger>
+									{/* TODO: ScrollArea instead of overflow-y-scroll */}
+									<AccordionContent>
+										<FormField
+											control={form.control}
+											name="garment"
+											render={({ field }) => (
+												<FormItem>
+													<FormControl>
+														<div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-h-[20rem] overflow-y-scroll">
+															{category.items.map((item) => (
+																<Card
+																	key={item.name}
+																	className={`w-full h-full cursor-pointer ${
+																		field.value === item.name
+																			? "bg-primary/10 border-primary"
+																			: ""
+																	}`}
+																	onClick={() => field.onChange(item.name)}
+																>
+																	<CardContent className="p-2">
+																		<img
+																			src={item.path}
+																			alt={item.name}
+																			className="w-full h-full object-cover"
+																		/>
+																	</CardContent>
+																</Card>
+															))}
+														</div>
+													</FormControl>
+												</FormItem>
+											)}
+										/>
+									</AccordionContent>
+								</AccordionItem>
+							))}
+						</Accordion>
+					</CardContent>
+					<CardFooter className="flex flex-col justify-center items-center gap-6">
+						<SizePicker form={form} />
+						<Button size={"lg"}>Try on</Button>
+					</CardFooter>
+				</Card>
+			</form>
+		</Form>
 	);
 };
 

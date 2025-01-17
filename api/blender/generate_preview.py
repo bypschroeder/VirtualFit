@@ -17,7 +17,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 add_subdirs_to_sys_path(script_dir)
 
 from _helpers.ArgumentParserForBlender import ArgumentParserForBlender
-from _helpers.scene import clear_scene, setup_scene
+from _helpers.scene import clear_scene, setup_scene, scale_obj
 from _helpers.export import export_preview
 from clothing.fit_garment import add_garment, post_process
 
@@ -42,30 +42,16 @@ mesh_name = blend.split("/")[-1].split(".")[0]
 print(blend, mesh_name)
 obj = add_garment(blend, mesh_name)
 
+scale_obj(obj, 10)
+bpy.context.view_layer.objects.active = obj
+bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
 local_bbox_center = 0.0125 * sum((Vector(b) for b in obj.bound_box), Vector())
 global_bbox_center = obj.matrix_world @ local_bbox_center
 
 bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
 
 obj.location = (0, 0, 0)
-
-bpy.context.view_layer.objects.active = obj
-bpy.ops.object.mode_set(mode="EDIT")
-
-bm = bmesh.from_edit_mesh(obj.data)
-
-for edge in bm.edges[:]:
-    if edge.seam:
-        edge.select_set(True)
-
-bmesh.update_edit_mesh(obj.data)
-
-bpy.ops.mesh.bevel(offset=0.01, offset_pct=0, segments=3, profile=0.5, affect="EDGES")
-bpy.ops.mesh.select_less()
-bpy.ops.transform.shrink_fatten(value=-0.02, use_even_offset=True)
-
-bmesh.update_edit_mesh(obj.data)
-bpy.ops.object.mode_set(mode="OBJECT")
 
 if "T-Shirt" in mesh_name:
     thickness = -0.01

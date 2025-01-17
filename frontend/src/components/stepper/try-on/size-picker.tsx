@@ -1,32 +1,40 @@
-import { useEffect, useState } from "react";
+import { FormControl, FormField, FormItem } from "@/components/ui/form";
+import { tryonSchema } from "@/schemas";
+import { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 import { Button } from "../../ui/button";
 
-const SizePicker = () => {
+interface SizePickerProps {
+	form: UseFormReturn<z.infer<typeof tryonSchema>>;
+}
+
+const SizePicker = ({ form }: SizePickerProps) => {
 	const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
-	const [selectedSize, setSelectedSize] = useState<string | null>(
-		sizes[0] || null
-	);
 
-	const handleSelect = (size: string) => {
-		setSelectedSize(size);
-	};
-
-	useEffect(() => {
-		console.log(`Selected size: ${selectedSize}`);
-	}, [selectedSize]);
 	return (
-		<div className="flex items-center">
-			{sizes.map((size) => (
-				<Button
-					variant={size === selectedSize ? "default" : "outline"}
-					className="rounded-none w-10"
-					key={size}
-					onClick={() => handleSelect(size)}
-				>
-					{size}
-				</Button>
-			))}
-		</div>
+		<FormField
+			control={form.control}
+			name="size"
+			render={({ field }) => (
+				<FormItem>
+					<FormControl>
+						<div className="flex items-center">
+							{sizes.map((size) => (
+								<Button
+									variant={field.value === size ? "default" : "outline"}
+									className="rounded-none w-10"
+									key={size}
+									onClick={() => field.onChange(size)}
+									type="button"
+								>
+									{size}
+								</Button>
+							))}
+						</div>
+					</FormControl>
+				</FormItem>
+			)}
+		/>
 	);
 };
 

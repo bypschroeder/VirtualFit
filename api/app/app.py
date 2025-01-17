@@ -9,15 +9,23 @@ from services.generate_3d_model import (
     shape_obj_smooth,
 )
 from services.generate_preview_images import (
-    move_blend_to_volume,
-    get_missing_previews,
+    get_files_by_gender,
+    find_missing_previews,
     generate_preview_imgs,
+    generate_presigned_urls,
 )
 from services.uptime import format_uptime
 from services.s3 import s3, create_buckets, BUCKETS_TO_CREATE
 from services.init_data import upload_data
+from services.validation import (
+    validate_gender,
+    validate_image,
+    validate_obj,
+    validate_garment,
+    validate_size,
+)
 import io
-from datetime import timedelta
+from services.simulate_cloth import simulate_cloth
 
 
 app = Flask(__name__)
@@ -40,20 +48,13 @@ def index():
 @app.route("/generate-3d-model", methods=["POST"])
 def generate_3d_model():
     try:
-        if "gender" not in request.form:
-            return jsonify({"error": "No gender provided"}), 400
+        gender = validate_gender(request.form)
+        if gender is None:
+            return jsonify({"error:" "Invalid gender provided"})
 
-        gender = request.form["gender"]
-        if gender not in ["male", "neutral", "female"]:
-            return jsonify({"error": "Invalid gender provided"}), 400
-
-        if "image" not in request.files:
-            return jsonify({"error": "No image file provided"}), 400
-
-        image_file = request.files["image"]
-
-        if image_file.filename == "":
-            return jsonify({"error": "No image file provided"}), 400
+        image_file = validate_image(request.files)
+        if image_file is None:
+            return jsonify({"error": "Invalid image file provided"})
 
         file_id = str(uuid.uuid4().hex)
         file_type = os.path.splitext(image_file.filename)[1]
@@ -94,56 +95,20 @@ def generate_3d_model():
 
 @app.route("/generate-previews", methods=["POST"])
 def generate_previews():
-    if "gender" not in request.form:
-        return jsonify({"error": "No gender provided"}), 400
-
-    gender = request.form["gender"]
-    if gender not in ["male", "neutral", "female"]:
+    gender = validate_gender(request.form)
+    if gender is None:
         return jsonify({"error": "Invalid gender provided"}), 400
 
     try:
-        objects = list(s3.list_objects(BUCKETS_TO_CREATE[1], recursive=True))
-        blend_files = [
-            obj.object_name
-            for obj in objects
-            if obj.object_name.endswith(".blend")
-            and os.path.basename(obj.object_name).startswith("L_")
-            and obj.object_name.split("/")[1] == gender
-        ]
-        preview_files = [
-            obj.object_name
-            for obj in objects
-            if obj.object_name.startswith("previews")
-            and obj.object_name.endswith(".png")
-            and os.path.basename(obj.object_name) == f"{gender}.png"
-        ]
-
-        missing_previews = []
-        for blend_file in blend_files:
-            clothing = blend_file.split("/")[0]
-            gender = blend_file.split("/")[1]
-            preview_file = f"previews/{clothing}/{gender}.png"
-
-            if preview_file not in preview_files:
-                missing_previews.append(blend_file)
+        blend_files, preview_files = get_files_by_gender(gender)
+        missing_previews = find_missing_previews(blend_files, preview_files)
     except Exception as e:
         print(f"Failed to retrieve missing previews: {e}")
         return jsonify({"error": e}), 500
 
     if not missing_previews:
         try:
-            expiration_time = timedelta(minutes=10)
-            presigned_urls = [
-                s3.presigned_get_object(
-                    BUCKETS_TO_CREATE[1], file_path, expiration_time
-                )
-                for file_path in preview_files
-            ]
-            external_url_base = "http://minio.localhost"
-            presigned_urls = [
-                url.replace("http://minio:9000", external_url_base)
-                for url in presigned_urls
-            ]
+            presigned_urls = generate_presigned_urls(preview_files)
         except Exception as e:
             print(f"Failed to generate presigned URLs: {e}")
             return jsonify({"error": e}), 500
@@ -174,16 +139,7 @@ def generate_previews():
         and obj.object_name.endswith(".png")
         and os.path.basename(obj.object_name) == f"{gender}.png"
     ]
-
-    expiration_time = timedelta(minutes=10)
-    presigned_urls = [
-        s3.presigned_get_object(BUCKETS_TO_CREATE[1], file_path, expiration_time)
-        for file_path in previews
-    ]
-    external_url_base = "http://minio.localhost"
-    presigned_urls = [
-        url.replace("http://minio:9000", external_url_base) for url in presigned_urls
-    ]
+    presigned_urls = generate_presigned_urls(previews)
 
     return (
         jsonify(
@@ -198,7 +154,42 @@ def generate_previews():
 
 @app.route("/try-on", methods=["POST"])
 def try_on():
-    pass
+    obj_key = validate_obj(request.files, s3, BUCKETS_TO_CREATE[0])
+    if obj_key is None:
+        return jsonify({"error": "Invalid obj file provided"}), 400
+
+    garment = validate_garment(request.form, s3, BUCKETS_TO_CREATE[1])
+    if garment is None:
+        return jsonify({"error": "Invalid garment provided"}), 400
+
+    gender = validate_gender(request.form)
+    if gender is None:
+        return jsonify({"error": "Invalid gender provided"}), 400
+
+    size = validate_size(request.form, s3, BUCKETS_TO_CREATE[1], garment, gender)
+    if size is None:
+        return jsonify({"error": "Invalid size provided"}), 400
+
+    garment_upper_case = garment.replace("-", " ").title().replace(" ", "-")
+    garment_key = f"{garment}/{gender}/{size}_{garment_upper_case}.blend"
+
+    if not simulate_cloth(
+        client,
+        BUCKETS_TO_CREATE[0],
+        BUCKETS_TO_CREATE[1],
+        obj_key,
+        garment_key,
+        gender,
+    ):
+        return jsonify({"error": "Failed to simulate cloth"}), 500
+
+    file_name = f"{os.path.splitext(os.path.basename(obj_key))[0]}_{os.path.splitext(os.path.basename(garment_key))[0]}.obj"
+    fit_obj_key = os.path.join("fits", file_name)
+    fit_obj_path = os.path.join("tmp", file_name)
+
+    s3.fget_object(BUCKETS_TO_CREATE[0], fit_obj_key, fit_obj_path)
+
+    return send_file(fit_obj_path, as_attachment=True), 200
 
 
 if __name__ == "__main__":

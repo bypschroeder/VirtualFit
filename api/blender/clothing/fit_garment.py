@@ -1,6 +1,7 @@
 import bpy
 import json
 import os
+import bmesh
 
 
 def add_garment(garment_filepath, obj_name):
@@ -76,12 +77,35 @@ def bake_cloth(start_frame, end_frame):
 
 
 def post_process(obj, thickness, levels):
+    bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = obj
+
     if obj.modifiers.get("Cloth"):
         bpy.ops.object.modifier_apply(modifier="Cloth")
 
     solidify = obj.modifiers.new(name="Solidify", type="SOLIDIFY")
     solidify.thickness = thickness
+    bpy.ops.object.modifier_apply(modifier="Solidify")
+
+    bpy.ops.object.mode_set(mode="EDIT")
+
+    bm = bmesh.from_edit_mesh(obj.data)
+
+    for edge in bm.edges:
+        if edge.seam:
+            edge.select_set(True)
+
+    bmesh.update_edit_mesh(obj.data)
+
+    bpy.ops.mesh.bevel(
+        offset=0.01, offset_pct=0, segments=3, profile=0.5, affect="EDGES"
+    )
+
+    bpy.ops.mesh.select_less()
+    bpy.ops.transform.shrink_fatten(value=-0.01, use_even_offset=True)
+
+    bmesh.update_edit_mesh(obj.data)
+    bpy.ops.object.mode_set(mode="OBJECT")
 
     subdivide = obj.modifiers.new(name="Subdivide", type="SUBSURF")
     subdivide.levels = levels

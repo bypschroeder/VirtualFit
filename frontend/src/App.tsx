@@ -6,6 +6,7 @@ import StepNav from "./components/stepper/step-nav";
 import Steps from "./components/stepper/steps";
 import { ThemeProvider } from "./components/theme-provider";
 import { Card } from "./components/ui/card";
+import useFitObjStore from "./store/useFitObjStore";
 import useObjStore from "./store/useObjStore";
 
 function App() {
@@ -15,7 +16,8 @@ function App() {
 	);
 	const stepper = useStepper();
 
-	const obj = useObjStore((state) => state.obj);
+	const { obj } = useObjStore();
+	const { fitObj } = useFitObjStore();
 
 	return (
 		<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
@@ -25,7 +27,9 @@ function App() {
 					<div className="gap-4 grid grid-cols-5 h-full">
 						<Steps stepper={stepper} />
 						<Card className="col-span-2 select-none">
-							{obj ? (
+							{fitObj ? (
+								<ModelViewer obj={fitObj} />
+							) : obj ? (
 								<ModelViewer obj={obj} />
 							) : (
 								<span className="flex justify-center items-center w-full h-full text-center">

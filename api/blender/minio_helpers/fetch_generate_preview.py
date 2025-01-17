@@ -6,7 +6,7 @@ from minio import Minio
 from minio.error import S3Error
 
 if len(sys.argv) < 2:
-    print("Usage: python3 download_and_execute.py <bucket_name> <missing_previews>")
+    print("Usage: python3 fetch_generate_preview.py <bucket_name> <missing_previews>")
     sys.exit(1)
 
 BUCKET_NAME = sys.argv[1]
@@ -41,7 +41,7 @@ if not os.path.exists(CLOTHES_DIR):
     print(f"Directory {CLOTHES_DIR} does not exist. Creating...")
     os.makedirs(CLOTHES_DIR)
 
-print(f"Downloading files from {BUCKET_NAME}")
+print(f"Downloading files from {BUCKET_NAME}...")
 try:
     objects = client.list_objects(BUCKET_NAME, recursive=True)
 

@@ -50,7 +50,7 @@ except S3Error as e:
     print(f"Error: Failed to download {OBJ_KEY} from {BUCKET_NAME}: {e}")
     sys.exit(1)
 
-print(f"Running blender script...")
+print("Running blender script...")
 try:
     subprocess.run(
         [

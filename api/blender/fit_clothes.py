@@ -48,7 +48,7 @@ args = parser.parse_args()
 gender = args.gender
 obj_filepath = args.obj
 garment_filepath = args.garment
-output_dir = args.output
+output_path = args.output
 
 if not os.path.exists(obj_filepath):
     raise FileNotFoundError(f"File {obj_filepath} not found.")
@@ -75,27 +75,29 @@ apply_all_transforms(generated_obj)
 
 shape_key_name = "Generated_Pose"
 join_as_shapes(avatar, generated_obj, shape_key_name)
-animate_shape_key(avatar, 0, 50, shape_key_name)
+animate_shape_key(avatar, 5, 50, shape_key_name)
 
 # Add garment and simulate cloth
 garment_name = garment_filepath.split("/")[-1].split(".")[0]
 garment = add_garment(garment_filepath, garment_name)
+scale_obj(garment, 10)
+bpy.context.view_layer.objects.active = garment
+bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
 garment_type = garment_name.split("_")[-1]
 set_cloth(garment, garment_type)
-bake_cloth(0, 80)
-post_process(garment, -0.1, 2)
+bake_cloth(0, 70)
+
+thickness_settings = {
+    "T-Shirt": -0.01,
+    "Sweatshirt": -0.03,
+    "Hoodie": -0.05,
+}
+post_process(garment, thickness_settings.get(garment_type), 2)
 
 # Export
-os.makedirs(output_dir, exist_ok=True)
-render_path = os.path.join(output_dir, f"{garment_name}_{gender}.png")
-export_img(
-    render_path,
-    config["export"]["img_format"],
-    config["export"]["img_type"],
-    config["export"]["transparent_bg"],
-)
-
+scale_obj(avatar, 0.1)
+scale_obj(garment, 0.1)
 format = config["export"]["3D_format"]
 type = config["export"]["3D_type"]
-obj_path = os.path.join(output_dir, f"{garment_name}_{gender}.{format.lower()}")
-export_3D(obj_path, format, type)
+export_3D(output_path, format, type)
