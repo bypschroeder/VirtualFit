@@ -16,7 +16,7 @@ const GenerationOngoing = () => {
 					<Info className="w-6 h-6 text-primary hover:text-primary/60" />
 				</HoverCardTrigger>
 				<HoverCardContent>
-					The generation usually takes around 1-2 Minutes. Be patient.
+					The generation usually takes around 1-2 minutes. Be patient.
 				</HoverCardContent>
 			</HoverCard>
 		</div>

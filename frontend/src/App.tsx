@@ -1,6 +1,7 @@
 import { defineStepper } from "@stepperize/react";
 import Footer from "./components/footer";
 import Header from "./components/header";
+import LoadingSpinner from "./components/loading-spinner";
 import ModelViewer from "./components/model-viewer";
 import StepNav from "./components/stepper/step-nav";
 import Steps from "./components/stepper/steps";
@@ -16,8 +17,9 @@ function App() {
 	);
 	const stepper = useStepper();
 
-	const { obj } = useObjStore();
-	const { fitObj } = useFitObjStore();
+	const { obj, isObjLoading } = useObjStore();
+	const { fitObj, isFitObjLoading } = useFitObjStore();
+	const isLoading = isObjLoading || isFitObjLoading;
 
 	return (
 		<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
@@ -27,7 +29,11 @@ function App() {
 					<div className="gap-4 grid grid-cols-5 h-full">
 						<Steps stepper={stepper} />
 						<Card className="col-span-2 select-none">
-							{fitObj ? (
+							{isLoading ? (
+								<div className="flex justify-center items-center w-full h-full">
+									<LoadingSpinner />
+								</div>
+							) : fitObj ? (
 								<ModelViewer obj={fitObj} />
 							) : obj ? (
 								<ModelViewer obj={obj} />

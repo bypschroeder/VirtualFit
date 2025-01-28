@@ -2,7 +2,6 @@ import bpy
 import os
 import sys
 from mathutils import Vector
-import bmesh
 
 
 # Add all subdirectories of the script directory to the system path so Blender can find the modules
@@ -20,9 +19,12 @@ from _helpers.ArgumentParserForBlender import ArgumentParserForBlender
 from _helpers.scene import clear_scene, setup_scene, scale_obj
 from _helpers.export import export_preview
 from clothing.fit_garment import add_garment, post_process
+from config.config_loader import load_config
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 add_subdirs_to_sys_path(script_dir)
+
+config = load_config()
 
 bpy.context.preferences.view.show_splash = False
 
@@ -54,15 +56,18 @@ bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
 obj.location = (0, 0, 0)
 
 if "T-Shirt" in mesh_name:
-    thickness = -0.01
+    thickness = config["garment"]["T-Shirt"]["thickness"]
+    levels = config["garment"]["T-Shirt"]["levels"]
 elif "Sweatshirt" in mesh_name:
-    thickness = -0.03
+    thickness = config["garment"]["Sweatshirt"]["thickness"]
+    levels = config["garment"]["Sweatshirt"]["levels"]
 elif "Hoodie" in mesh_name:
-    thickness = -0.05
+    thickness = config["garment"]["Hoodie"]["thickness"]
+    levels = config["garment"]["Hoodie"]["levels"]
 else:
-    thickness = -0.001
+    thickness = -0.01
 
-post_process(obj, thickness, levels=2)
+post_process(obj, thickness, levels)
 
 setup_scene(
     camera_location=(0, -21, 0),
@@ -70,4 +75,7 @@ setup_scene(
     light_rotation=(90, 0, 0),
 )
 
-export_preview(output)
+resolution_x = config["export"]["preview"]["resolution_x"]
+resolution_y = config["export"]["preview"]["resolution_y"]
+samples = config["export"]["preview"]["samples"]
+export_preview(output, resolution_x, resolution_y, samples)

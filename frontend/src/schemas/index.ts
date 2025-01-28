@@ -5,8 +5,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png"];
 
 export const generateSchema = z.object({
 	gender: z.enum(["male", "female"]),
-	height: z.coerce.number().min(140).max(220),
-	weight: z.coerce.number().min(40).max(120),
+	height: z.coerce.number().min(1.4).max(2.2),
 	image: z
 		.any()
 		.refine(

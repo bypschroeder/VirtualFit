@@ -6,7 +6,7 @@ from minio import Minio
 from minio.error import S3Error
 
 if len(sys.argv) < 2:
-    print("Usage: python3 ./smooth_obj/download_and_execute,py <bucket_name> <obj_key>")
+    print("Usage: python3 fetch_shade_smoothpy <bucket_name> <obj_key>")
     sys.exit(1)
 
 BUCKET_NAME = sys.argv[1]
@@ -14,17 +14,10 @@ OBJ_KEY = sys.argv[2]
 
 OBJ_DIR = "/data"
 
-# client = Minio(
-#     endpoint=os.getenv("MINIO_ENDPOINT"),
-#     access_key=os.getenv("MINIO_ACCESS_KEY"),
-#     secret_key=os.getenv("MINIO_SECRET_KEY"),
-#     secure=False,
-# )
-
 client = Minio(
-    endpoint="minio:9000",
-    access_key="admin",
-    secret_key="password",
+    endpoint=os.getenv("MINIO_ENDPOINT"),
+    access_key=os.getenv("MINIO_ACCESS_KEY"),
+    secret_key=os.getenv("MINIO_SECRET_KEY"),
     secure=False,
 )
 

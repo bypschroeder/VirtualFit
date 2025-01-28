@@ -15,17 +15,10 @@ missing_previews_paths = MISSING_PREVIEWS.split(",")
 
 CLOTHES_DIR = "/data"
 
-# client = Minio(
-#     endpoint=os.getenv("MINIO_ENDPOINT"),
-#     access_key=os.getenv("MINIO_ACCESS_KEY"),
-#     secret_key=os.getenv("MINIO_SECRET_KEY"),
-#     secure=False,
-# )
-
 client = Minio(
-    endpoint="minio:9000",
-    access_key="admin",
-    secret_key="password",
+    endpoint=os.getenv("MINIO_ENDPOINT"),
+    access_key=os.getenv("MINIO_ACCESS_KEY"),
+    secret_key=os.getenv("MINIO_SECRET_KEY"),
     secure=False,
 )
 

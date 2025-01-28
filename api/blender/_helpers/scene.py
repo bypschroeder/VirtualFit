@@ -4,9 +4,7 @@ import bmesh
 
 
 def clear_scene():
-    """
-    Clears the current scene of all objects.
-    """
+    """Clears the current scene of all objects."""
     bpy.ops.object.select_all(action="DESELECT")
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete()
@@ -17,10 +15,13 @@ def clear_scene():
 
 
 def setup_scene(camera_location, camera_rotation, light_rotation):
-    """
-    Adds a camera and light to the scene.
-    """
+    """Sets up the scene with a camera and light.
 
+    Args:
+        camera_location (tuple): The location of the camera. Must be a tuple of x, y, and z coordinates.
+        camera_rotation (tuple): The rotation of the camera. Must be a tuple of x, y, and z angles in degrees.
+        light_rotation (tuple): The rotation of the light. Must be a tuple of x, y, and z angles in degrees.
+    """
     c_rotation = tuple(math.radians(angle) for angle in camera_rotation)
     l_rotation = tuple(math.radians(angle) for angle in light_rotation)
 
@@ -31,6 +32,11 @@ def setup_scene(camera_location, camera_rotation, light_rotation):
 
 
 def snap_to_ground_plane(obj):
+    """Snaps an object to the ground plane.
+
+    Args:
+        obj (bpy.types.Object): The object to snap to the ground plane.
+    """
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.mode_set(mode="EDIT")
 
@@ -48,9 +54,20 @@ def snap_to_ground_plane(obj):
 
 
 def apply_all_transforms(obj):
+    """Applies all transformations to an object.
+
+    Args:
+        obj (bpy.types.Object): The object to apply all transformations to.
+    """
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
 
 def scale_obj(obj, scale_factor):
+    """Scales an object by a given factor.
+
+    Args:
+        obj (bpy.types.Object): The object to scale.
+        scale_factor (float): The factor by which to scale the object.
+    """
     obj.scale = (scale_factor, scale_factor, scale_factor)

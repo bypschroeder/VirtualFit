@@ -1,12 +1,26 @@
 {
-    "export":
-        {
-            "img_format": "PNG",
-            "img_type": "FULL",
-            "transparent_bg": true,
-            "resolution_x": 1080,
-            "resolution_y": 1080,
-            "3D_format": "OBJ",
-            "3D_type": "FULL"
-        }
+	"garment": {
+		"T-Shirt": {
+			"thickness": -0.01,
+			"levels": 2
+		},
+		"Sweatshirt": {
+			"thickness": -0.03,
+			"levels": 2
+		},
+		"Hoodie": {
+			"thickness": -0.05,
+			"levels": 2
+		}
+	},
+	"export": {
+		"3D": {
+			"format": "OBJ"
+		},
+		"preview": {
+			"resolution_x": 540,
+			"resolution_y": 540,
+			"samples": 16
+		}
+	}
 }

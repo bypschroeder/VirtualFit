@@ -6,9 +6,10 @@ import { Button } from "../../ui/button";
 
 interface SizePickerProps {
 	form: UseFormReturn<z.infer<typeof tryonSchema>>;
+	disabled?: boolean;
 }
 
-const SizePicker = ({ form }: SizePickerProps) => {
+const SizePicker = ({ form, disabled }: SizePickerProps) => {
 	const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 	return (
@@ -26,6 +27,7 @@ const SizePicker = ({ form }: SizePickerProps) => {
 									key={size}
 									onClick={() => field.onChange(size)}
 									type="button"
+									disabled={disabled}
 								>
 									{size}
 								</Button>

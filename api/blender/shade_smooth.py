@@ -34,13 +34,12 @@ if not os.path.exists(obj_filepath):
 
 clear_scene()
 
-obj = import_obj(obj_filepath)
+obj = import_obj(obj_filepath, 0.001, 0.001)
 mesh = obj.data
 
 for f in mesh.polygons:
     f.use_smooth = True
 
-format = config["export"]["3D_format"]
-type = config["export"]["3D_type"]
+format = config["export"]["3D"]["format"]
 smooth_obj_path = obj_filepath.replace(".obj", "_smooth.obj")
-export_3D(smooth_obj_path, format, type)
+export_3D(smooth_obj_path, format)

@@ -5,6 +5,19 @@ import bmesh
 
 
 def add_garment(garment_filepath, obj_name):
+    """Adds a garment to the scene.
+
+    Args:
+        garment_filepath (str): The path to the garment blend file.
+        obj_name (str): The name of the garment object.
+
+    Raises:
+        FileNotFoundError: If the garment blend file is not found.
+        ValueError: If the garment object is not found.
+
+    Returns:
+        bpy.types.Object: The added garment object.
+    """
     if not os.path.exists(garment_filepath):
         raise FileNotFoundError(f"File {garment_filepath} not found.")
 
@@ -18,12 +31,20 @@ def add_garment(garment_filepath, obj_name):
         bpy.context.collection.objects.link(obj)
         print(f"{obj_name} was appended")
     else:
-        raise ValueError(f"Object {obj_name} not found.")
+        raise ValueError(f"Object {obj_name} not found")
 
     return obj
 
 
 def set_cloth(garment, garment_type):
+    """Sets the cloth modifier with its specified settings for the garment type.
+
+    The cloth settings are specified in the cloth_config.json file.
+
+    Args:
+        garment (bpy.types.Object): The garment object.
+        garment_type (str): The type of the garment. Must be 'T-Shirt', 'Sweatshirt', or 'Hoodie'.
+    """
     with open("./clothing/cloth_config.json", "r") as f:
         cloth_config = json.load(f)
     garment_config = cloth_config[garment_type]
@@ -61,6 +82,12 @@ def set_cloth(garment, garment_type):
 
 
 def bake_cloth(start_frame, end_frame):
+    """Bakes the cloth animation for the garment.
+
+    Args:
+        start_frame (int): The start frame of the cloth animation.
+        end_frame (int): The end frame of the cloth animation.
+    """
     for scene in bpy.data.scenes:
         for object in scene.objects:
             for modifier in object.modifiers:
@@ -77,6 +104,13 @@ def bake_cloth(start_frame, end_frame):
 
 
 def post_process(obj, thickness, levels):
+    """Post-processes the garment by applying modifiers and modifying its geometry.
+
+    Args:
+        obj (bpy.types.Object): The garment object.
+        thickness (float): The thickness of the garment.
+        levels (int): The number of subdivisions for the garment.
+    """
     bpy.ops.object.select_all(action="DESELECT")
     bpy.context.view_layer.objects.active = obj
 

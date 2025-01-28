@@ -15,7 +15,7 @@ interface GenerationDoneProps {
 const GenerationDone = ({ form }: GenerationDoneProps) => {
 	const { obj, setObj } = useObjStore();
 	const { setIsGenerating, setGeneratingDone } = useGenerationStore();
-	const { setGender, setHeight, setWeight } = useFormStore();
+	const { setGender, setHeight } = useFormStore();
 	const { setImage } = useImageStore();
 
 	const handleResetModel = () => {
@@ -24,10 +24,8 @@ const GenerationDone = ({ form }: GenerationDoneProps) => {
 		setGeneratingDone(false);
 		setGender(undefined);
 		setHeight(0);
-		setWeight(0);
 		form.setValue("gender", undefined!);
 		form.setValue("height", 0);
-		form.setValue("weight", 0);
 		form.setValue("image", "");
 		setImage(null);
 	};

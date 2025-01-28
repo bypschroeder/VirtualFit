@@ -19,17 +19,10 @@ GENDER = sys.argv[5]
 
 DATA_DIR = "/data"
 
-# client = Minio(
-#     endpoint=os.getenv("MINIO_ENDPOINT"),
-#     access_key=os.getenv("MINIO_ACCESS_KEY"),
-#     secret_key=os.getenv("MINIO_SECRET_KEY"),
-#     secure=False,
-# )
-
 client = Minio(
-    endpoint="minio:9000",
-    access_key="admin",
-    secret_key="password",
+    endpoint=os.getenv("MINIO_ENDPOINT"),
+    access_key=os.getenv("MINIO_ACCESS_KEY"),
+    secret_key=os.getenv("MINIO_SECRET_KEY"),
     secure=False,
 )
 
@@ -67,7 +60,7 @@ except S3Error as e:
     print(f"Error: Failed to download {GARMENT_KEY} from {GARMENT_BUCKET_NAME}: {e}")
     sys.exit(1)
 
-file_name = f"{os.path.splitext(os.path.basename(OBJ_KEY))[0]}_{os.path.splitext(os.path.basename(GARMENT_KEY))[0]}.obj"
+file_name = f"{os.path.splitext(os.path.basename(GARMENT_KEY))[0]}.obj"
 
 output_path = os.path.join(DATA_DIR, file_name)
 print("Running blender script...")
@@ -96,7 +89,7 @@ except subprocess.CalledProcessError as e:
     sys.exit(1)
 
 print(f"Uploading fitted obj to {OBJ_BUCKET_NAME}...")
-upload_path = os.path.join("fits", file_name)
+upload_path = os.path.join(OBJ_KEY.split("/")[0], file_name)
 try:
     client.fput_object(OBJ_BUCKET_NAME, upload_path, output_path)
     print(f"File {output_path} uploaded successfully to {upload_path}")

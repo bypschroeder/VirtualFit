@@ -72,26 +72,7 @@ const FormFields = ({ form }: FormFieldsProps) => {
 						<FormLabel>Height</FormLabel>
 						<FormControl>
 							<Input
-								placeholder="Height"
-								{...field}
-								type="number"
-								value={field.value === 0 ? "" : field.value}
-								disabled={generatingDone || isGenerating}
-							/>
-						</FormControl>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-			<FormField
-				control={form.control}
-				name="weight"
-				render={({ field }) => (
-					<FormItem className="w-full">
-						<FormLabel>Weight</FormLabel>
-						<FormControl>
-							<Input
-								placeholder="Weight"
+								placeholder="e.g 1.75"
 								{...field}
 								type="number"
 								value={field.value === 0 ? "" : field.value}

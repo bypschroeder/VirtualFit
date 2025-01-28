@@ -23,9 +23,15 @@ from _helpers.scene import (
     apply_all_transforms,
     scale_obj,
 )
-from smpl.avatar import import_obj, join_as_shapes, animate_shape_key
+from smpl.avatar import (
+    import_blend,
+    import_obj,
+    join_as_shapes,
+    animate_shape_key,
+    add_collision,
+)
 from clothing.fit_garment import add_garment, set_cloth, bake_cloth, post_process
-from _helpers.export import export_img, export_3D
+from _helpers.export import export_3D
 
 # Load the config file
 config = load_config()
@@ -41,7 +47,7 @@ parser.add_argument(
     "--garment", type=str, required=True, help="Path to the .blend file of the garment"
 )
 parser.add_argument(
-    "--output", type=str, required=True, help="Path to the output directory"
+    "--output", type=str, required=True, help="Path where the obj file should be saved"
 )
 args = parser.parse_args()
 
@@ -64,7 +70,11 @@ setup_scene(
 )
 
 # Create avatar and animate to generated obj
-avatar = import_obj(f"./smpl/base_mesh/{gender}.obj")
+avatar = import_blend(
+    f"/vf_blender/smpl/base_mesh/SMPL_{gender}.blend",
+    f"SMPL_{gender}",
+)
+add_collision(avatar, 0.001, 0.001)
 scale_obj(avatar, 10)
 snap_to_ground_plane(avatar)
 apply_all_transforms(avatar)
@@ -98,6 +108,5 @@ post_process(garment, thickness_settings.get(garment_type), 2)
 # Export
 scale_obj(avatar, 0.1)
 scale_obj(garment, 0.1)
-format = config["export"]["3D_format"]
-type = config["export"]["3D_type"]
-export_3D(output_path, format, type)
+format = config["export"]["3D"]["format"]
+export_3D(output_path, format)

@@ -48,7 +48,7 @@ services:
       - all
       - app
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27.3-alpine
     container_name: nginx
     ports:
       - "80:80"
@@ -80,27 +80,11 @@ services:
     profiles:
       - tools
       - all
-  openpose:
-    image: openpose:latest
-    container_name: openpose
+  hp3d:
+    image: hp3d:latest
+    container_name: hp3d
     build:
-      context: ./api/openpose
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=admin
-      - MINIO_SECRET_KEY=password
-    networks:
-      - app-network
-    profiles:
-      - tools
-      - all
-  smplify-x:
-    image: smplify-x:latest
-    container_name: smplify-x
-    build:
-      context: ./api/smplify-x
+      context: ./api/hp3d
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all

@@ -1,0 +1,21 @@
+# Jetbrains 
+*.idea*
+*.xml*
+
+#Mac
+*.DS_Store
+
+#Pycache
+*.pyc
+
+#Weights
+*pth
+*tar
+
+#Demo output
+output*/*
+
+#Experiments
+experiments/*
+
+*.pkl

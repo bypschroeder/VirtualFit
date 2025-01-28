@@ -33,12 +33,13 @@ interface PreviewFile {
 }
 
 const TryOnStep = () => {
-	const [loading, setLoading] = useState(true);
+	const [loadingPreviews, setLoadingPreviews] = useState(true);
+	const [loadingFit, setLoadingFit] = useState(false);
 	const [previewFiles, setPreviewFiles] = useState<PreviewFile[]>([]);
 
 	const { gender } = useFormStore();
 	const { obj } = useObjStore();
-	const { setFitObj } = useFitObjStore();
+	const { setFitObj, setIsFitObjLoading } = useFitObjStore();
 
 	useEffect(() => {
 		const fetchPreviews = async () => {
@@ -86,7 +87,7 @@ const TryOnStep = () => {
 					});
 				}
 				setPreviewFiles(downloadedFiles);
-				setLoading(false);
+				setLoadingPreviews(false);
 			} catch (error) {
 				console.error("Error fetching previews: ", error);
 			}
@@ -139,6 +140,9 @@ const TryOnStep = () => {
 			formData.append("gender", values.gender);
 			formData.append("size", values.size);
 
+			setLoadingFit(true);
+			setIsFitObjLoading(true);
+
 			const response = await fetch("http://api.localhost/try-on", {
 				method: "POST",
 				body: formData,
@@ -151,12 +155,16 @@ const TryOnStep = () => {
 			const fitObj = await response.text();
 
 			setFitObj(fitObj);
+			setLoadingFit(false);
+			setIsFitObjLoading(false);
 		} catch (error) {
 			console.error("Error generating the virutal fit", error);
+			setLoadingFit(false);
+			setIsFitObjLoading(false);
 		}
 	};
 
-	if (loading) {
+	if (loadingPreviews) {
 		return (
 			<Card className="flex justify-center items-center h-full">
 				<CardContent>
@@ -206,8 +214,16 @@ const TryOnStep = () => {
 																		field.value === item.name
 																			? "bg-primary/10 border-primary"
 																			: ""
+																	} ${
+																		loadingFit
+																			? "opacity-50 cursor-not-allowed"
+																			: ""
 																	}`}
-																	onClick={() => field.onChange(item.name)}
+																	onClick={() => {
+																		if (!loadingFit) {
+																			field.onChange(item.name);
+																		}
+																	}}
 																>
 																	<CardContent className="p-2">
 																		<img
@@ -229,8 +245,10 @@ const TryOnStep = () => {
 						</Accordion>
 					</CardContent>
 					<CardFooter className="flex flex-col justify-center items-center gap-6">
-						<SizePicker form={form} />
-						<Button size={"lg"}>Try on</Button>
+						<SizePicker form={form} disabled={loadingFit} />
+						<Button size={"lg"} disabled={loadingFit}>
+							{loadingFit ? <LoadingSpinner /> : "Try on"}
+						</Button>
 					</CardFooter>
 				</Card>
 			</form>

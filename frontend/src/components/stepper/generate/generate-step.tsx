@@ -1,4 +1,5 @@
 import { generateSchema } from "@/schemas";
+import useFitObjStore from "@/store/useFitObjStore";
 import useFormStore from "@/store/useFormStore";
 import useGenerationStore from "@/store/useGenerationStore";
 import useImageStore from "@/store/useImageStore";
@@ -22,15 +23,14 @@ const GenerateStep = () => {
 	const { image, setImage } = useImageStore();
 	const { isGenerating, setIsGenerating, generatingDone, setGeneratingDone } =
 		useGenerationStore();
-	const { gender, setGender, height, setHeight, weight, setWeight } =
-		useFormStore();
-	const { setObj } = useObjStore();
+	const { gender, setGender, height, setHeight } = useFormStore();
+	const { setObj, setIsObjLoading } = useObjStore();
+	const { setFitObj } = useFitObjStore();
 
 	const form = useForm<z.infer<typeof generateSchema>>({
 		resolver: zodResolver(generateSchema),
 		defaultValues: {
 			gender: gender,
-			weight: weight,
 			height: height,
 			image: "",
 		},
@@ -38,18 +38,19 @@ const GenerateStep = () => {
 
 	const onSubmit = async (values: z.infer<typeof generateSchema>) => {
 		try {
+			setObj(null);
+			setFitObj(null);
 			setError(null);
 
 			setGender(values.gender);
-			setWeight(values.weight);
 			setHeight(values.height);
 
 			const formData = new FormData();
 			formData.append("image", values.image);
 			formData.append("gender", values.gender);
-			// formData.append("height", String(values.height));
-			// formData.append("weight", String(values.weight));
+			formData.append("height", String(values.height));
 			setIsGenerating(true);
+			setIsObjLoading(true);
 			const response = await fetch("http://api.localhost/generate-3d-model", {
 				method: "POST",
 				body: formData,
@@ -64,10 +65,12 @@ const GenerateStep = () => {
 			setObj(obj);
 			setGeneratingDone(true);
 			setIsGenerating(false);
+			setIsObjLoading(false);
 		} catch (error) {
 			console.error("Error generating 3D model: ", error);
 			setIsGenerating(false);
 			setGeneratingDone(false);
+			setIsObjLoading(false);
 			setError("Error generating 3D model. Please try again.");
 		}
 	};

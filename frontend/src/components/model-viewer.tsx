@@ -17,6 +17,12 @@ const ModelViewer = ({ obj }: ModelProps) => {
 		if (obj) {
 			const loader = new OBJLoader();
 			const parsedObject = loader.parse(obj);
+
+			const boundingBox = new THREE.Box3().setFromObject(parsedObject);
+			const center = new THREE.Vector3();
+			boundingBox.getCenter(center);
+			parsedObject.position.sub(center);
+
 			setObject3D(parsedObject);
 			setIsLoading(false);
 		}
@@ -35,7 +41,12 @@ const ModelViewer = ({ obj }: ModelProps) => {
 			<ambientLight intensity={0.5} />
 			<directionalLight position={[10, 10, 10]} intensity={1} />
 			{object3D && <primitive object={object3D} scale={1} />}
-			<OrbitControls enableZoom={true} />
+			<OrbitControls
+				enableZoom={true}
+				minDistance={0.5}
+				maxDistance={3}
+				enableDamping={true}
+			/>
 		</Canvas>
 	);
 };
