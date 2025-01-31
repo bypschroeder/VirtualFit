@@ -1,24 +1,29 @@
 import LoadingSpinner from "@/components/loading-spinner";
 import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Info } from "lucide-react";
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from "@/components/ui/card";
 
 const GenerationOngoing = () => {
 	return (
-		<div className="flex justify-center items-center gap-4 h-10">
-			<LoadingSpinner className="w-8 h-8" />
-			<span className="font-semibold text-lg">Generating Model...</span>
-			<HoverCard>
-				<HoverCardTrigger>
-					<Info className="w-6 h-6 text-primary hover:text-primary/60" />
-				</HoverCardTrigger>
-				<HoverCardContent>
-					The generation usually takes around 1-2 minutes. Be patient.
-				</HoverCardContent>
-			</HoverCard>
+		<div className="z-10 absolute inset-0 flex justify-center items-center bg-black/75">
+			<Card>
+				<CardHeader>
+					<h1 className="font-bold text-2xl text-center">Generation ongoing</h1>
+				</CardHeader>
+				<CardContent>
+					<span className="text-center">
+						This usually takes around 30 seconds.
+					</span>
+				</CardContent>
+				<CardFooter>
+					<div className="flex justify-center items-center w-full">
+						<LoadingSpinner className="w-9 h-9" />
+					</div>
+				</CardFooter>
+			</Card>
 		</div>
 	);
 };

@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { generateSchema } from "@/schemas";
 import useGenerationStore from "@/store/useGenerationStore";
-import { useEffect, useState } from "react";
+import useObjStore from "@/store/useObjStore";
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
@@ -24,16 +25,15 @@ interface FormFieldsProps {
 }
 
 const FormFields = ({ form }: FormFieldsProps) => {
-	const { isGenerating, generatingDone } = useGenerationStore();
+	// State Management
+	const { isGenerating } = useGenerationStore();
+	const { obj } = useObjStore();
 
+	// Form
 	const [selectValue, setSelectValue] = useState<"male" | "female">(
 		form.getValues("gender")
 	);
 
-	// FIXME: Select doesnt reset when not going next
-	useEffect(() => {
-		setSelectValue(form.getValues("gender"));
-	}, [form, form.getValues("gender")]);
 	return (
 		<div className="flex justify-evenly gap-12">
 			<FormField
@@ -47,7 +47,7 @@ const FormFields = ({ form }: FormFieldsProps) => {
 								field.onChange(value);
 								setSelectValue(value);
 							}}
-							disabled={generatingDone || isGenerating}
+							disabled={!!obj || isGenerating}
 							value={selectValue}
 						>
 							<FormControl>
@@ -76,7 +76,8 @@ const FormFields = ({ form }: FormFieldsProps) => {
 								{...field}
 								type="number"
 								value={field.value === 0 ? "" : field.value}
-								disabled={generatingDone || isGenerating}
+								disabled={!!obj || isGenerating}
+								step={0.01}
 							/>
 						</FormControl>
 						<FormMessage />

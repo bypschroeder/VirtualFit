@@ -25,6 +25,7 @@ interface StepsProps {
 		]
 	>;
 }
+
 const Steps = ({ stepper }: StepsProps) => {
 	return (
 		<div className="flex flex-col gap-4 col-span-3">

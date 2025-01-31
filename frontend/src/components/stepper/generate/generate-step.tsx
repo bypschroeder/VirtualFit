@@ -1,84 +1,28 @@
-import { generateSchema } from "@/schemas";
+import { Button } from "@/components/ui/button";
+import { handleResetImage } from "@/lib/handlers";
+import { useGenerateForm } from "@/lib/hooks";
+import useErrorStore from "@/store/useErrorStore";
 import useFitObjStore from "@/store/useFitObjStore";
-import useFormStore from "@/store/useFormStore";
 import useGenerationStore from "@/store/useGenerationStore";
 import useImageStore from "@/store/useImageStore";
 import useObjStore from "@/store/useObjStore";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { Box, Trash2, TriangleAlert } from "lucide-react";
 import { Card, CardContent } from "../../ui/card";
 import { Form } from "../../ui/form";
 import FormFields from "./form-fields";
-import GenerationDone from "./generation-done";
-import GenerationNew from "./generation-new";
 import GenerationOngoing from "./generation-ongoing";
 import ImageCapture from "./image-capture";
 import ImageUploader from "./image-uploader";
 
 const GenerateStep = () => {
-	const [error, setError] = useState<string | null>(null);
-
+	// State Management
 	const { image, setImage } = useImageStore();
-	const { isGenerating, setIsGenerating, generatingDone, setGeneratingDone } =
-		useGenerationStore();
-	const { gender, setGender, height, setHeight } = useFormStore();
-	const { setObj, setIsObjLoading } = useObjStore();
+	const { isGenerating } = useGenerationStore();
+	const { obj, setObj } = useObjStore();
 	const { setFitObj } = useFitObjStore();
+	const { generationError, setGenerationError } = useErrorStore();
 
-	const form = useForm<z.infer<typeof generateSchema>>({
-		resolver: zodResolver(generateSchema),
-		defaultValues: {
-			gender: gender,
-			height: height,
-			image: "",
-		},
-	});
-
-	const onSubmit = async (values: z.infer<typeof generateSchema>) => {
-		try {
-			setObj(null);
-			setFitObj(null);
-			setError(null);
-
-			setGender(values.gender);
-			setHeight(values.height);
-
-			const formData = new FormData();
-			formData.append("image", values.image);
-			formData.append("gender", values.gender);
-			formData.append("height", String(values.height));
-			setIsGenerating(true);
-			setIsObjLoading(true);
-			const response = await fetch("http://api.localhost/generate-3d-model", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) {
-				throw new Error(`Error: ${response.status} - ${response.statusText}`);
-			}
-
-			const obj = await response.text();
-
-			setObj(obj);
-			setGeneratingDone(true);
-			setIsGenerating(false);
-			setIsObjLoading(false);
-		} catch (error) {
-			console.error("Error generating 3D model: ", error);
-			setIsGenerating(false);
-			setGeneratingDone(false);
-			setIsObjLoading(false);
-			setError("Error generating 3D model. Please try again.");
-		}
-	};
-
-	const handleResetImage = () => {
-		setImage(null);
-		setError(null);
-	};
+	const { form, onSubmit } = useGenerateForm();
 
 	return (
 		<Form {...form}>
@@ -99,23 +43,48 @@ const GenerateStep = () => {
 							</div>
 						) : (
 							<div className="flex flex-col justify-center items-center gap-4 w-full h-full">
-								<div className="relative rounded-md max-w-4xl max-h-[32rem] overflow-hidden">
+								<div className="relative rounded-md max-w-4xl max-h-[36rem] overflow-hidden">
+									<div className="top-0 left-0 z-10 absolute p-2">
+										<Button
+											variant={"destructive"}
+											size={"icon"}
+											type="button"
+											onClick={() =>
+												handleResetImage(
+													setObj,
+													setFitObj,
+													setImage,
+													setGenerationError
+												)
+											}
+											disabled={isGenerating && !obj}
+										>
+											<Trash2 />
+										</Button>
+									</div>
 									<img
 										src={image}
 										alt="Uploaded Image"
 										className="w-full h-full object-contain"
 									/>
+									{!obj && !isGenerating && (
+										<div className="bottom-0 z-10 absolute flex flex-col items-center gap-4 mb-4 w-full">
+											<Button type="submit">
+												<Box />
+												<span>Generate Model</span>
+											</Button>
+											{generationError && (
+												<div className="flex justify-center items-center gap-2 bg-background p-2 border border-border rounded-md">
+													<TriangleAlert className="w-5 h-5 text-destructive" />
+													<span className="font-semibold text-destructive text-sm">
+														{generationError}
+													</span>
+												</div>
+											)}
+										</div>
+									)}
 								</div>
-								{!generatingDone && !isGenerating && (
-									<GenerationNew
-										error={error}
-										handleResetImage={handleResetImage}
-									/>
-								)}
-								{isGenerating && !generatingDone && <GenerationOngoing />}
-								{!isGenerating && generatingDone && (
-									<GenerationDone form={form} />
-								)}
+								{isGenerating && !obj && <GenerationOngoing />}
 							</div>
 						)}
 					</CardContent>

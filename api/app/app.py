@@ -1,5 +1,5 @@
 from flask import Flask
-from services.s3 import s3, create_buckets
+from services.s3 import s3, create_buckets, clear_bucket
 from services.init_data import upload_data
 from routes import main
 from logger import setup_logger
@@ -10,7 +10,8 @@ def create_app():
     app = Flask(__name__)  # Flask app
     app.config.from_object(Config)  # Load config
 
-    create_buckets(app.config["BUCKETS"], app)  # Create bucketsj
+    create_buckets(app.config["BUCKETS"], app)  # Create buckets
+    clear_bucket(app.config["BUCKETS"][0], app)  # Clear data bucket
     upload_data(
         s3, app.config["BUCKETS"][1], "./init_data/models", app
     )  # Upload init data

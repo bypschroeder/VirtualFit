@@ -17,6 +17,7 @@ def set_lifecycle(bucket_name, app):
 
     Args:
         bucket_name (str): The name of the bucket to set the lifecycle rule for.
+        app: The Flask app.
     """
     try:
         rule = Rule(
@@ -39,6 +40,7 @@ def create_buckets(buckets, app):
 
     Args:
         buckets (list): A list of bucket names to create.
+        app: The Flask app.
     """
     for bucket_name in buckets:
         try:
@@ -51,3 +53,24 @@ def create_buckets(buckets, app):
                 app.logger.info(f"Bucket {bucket_name} already exists")
         except S3Error as e:
             app.logger.error(f"Failed to create bucket: {e}")
+
+
+def clear_bucket(bucket_name, app):
+    """Clears the contents of a bucket.
+
+    Args:
+        bucket_name (str): The name of the bucket to clear.
+        app: The Flask app.
+    """
+    try:
+        objects = s3.list_objects(bucket_name, recursive=True)
+
+        for obj in objects:
+            s3.remove_object(bucket_name, obj.object_name)
+            app.logger.info(
+                f"Removed object {obj.object_name} from bucket {bucket_name}"
+            )
+
+        app.logger.info(f"Cleared bucket {bucket_name}")
+    except S3Error as e:
+        app.logger.error(f"Failed to clear bucket {bucket_name}: {e}")

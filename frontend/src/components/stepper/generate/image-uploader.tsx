@@ -1,7 +1,7 @@
+import { handleImageUpload } from "@/lib/handlers";
 import { generateSchema } from "@/schemas";
 import useImageStore from "@/store/useImageStore";
 import { UploadIcon } from "lucide-react";
-import { ChangeEvent } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
@@ -10,27 +10,8 @@ interface ImageUploaderProps {
 }
 
 const ImageUploader = ({ form }: ImageUploaderProps) => {
+	// State Management
 	const { setImage } = useImageStore();
-
-	const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0];
-		if (file) {
-			const maxSizeInBytes = 1024 * 1024 * 5; // 5MB
-			if (file.size > maxSizeInBytes) {
-				alert("Image size exceeds 5MB");
-				return;
-			}
-
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (typeof reader.result === "string") {
-					setImage(reader.result);
-				}
-			};
-			form.setValue("image", file);
-			reader.readAsDataURL(file);
-		}
-	};
 
 	return (
 		<label
@@ -44,7 +25,7 @@ const ImageUploader = ({ form }: ImageUploaderProps) => {
 				accept="image/png, image/jpeg"
 				className="sr-only"
 				id="file-upload"
-				onChange={handleImageUpload}
+				onChange={(event) => handleImageUpload(event, setImage, form)}
 			/>
 		</label>
 	);

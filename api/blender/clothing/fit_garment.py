@@ -144,3 +144,8 @@ def post_process(obj, thickness, levels):
     subdivide = obj.modifiers.new(name="Subdivide", type="SUBSURF")
     subdivide.levels = levels
     subdivide.render_levels = levels
+
+    # Recalculate Normals
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode="OBJECT")

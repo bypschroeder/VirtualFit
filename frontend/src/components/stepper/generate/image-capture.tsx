@@ -31,14 +31,15 @@ interface ImageCaptureProps {
 }
 
 const ImageCapture = ({ form }: ImageCaptureProps) => {
+	// State Management
 	const webcamRef = useRef<Webcam>(null);
 	const [showDialog, setShowDialog] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [timer, setTimer] = useState<number>(0);
 	const [countdown, setCountdown] = useState<number>(0);
-
 	const { setImage } = useImageStore();
 
+	// Functions
 	const handleUserMedia = () => {
 		setIsLoading(false);
 	};
@@ -85,6 +86,7 @@ const ImageCapture = ({ form }: ImageCaptureProps) => {
 			}
 		}
 	};
+
 	return (
 		<Dialog
 			open={showDialog}

@@ -10,9 +10,11 @@ interface ModelProps {
 }
 
 const ModelViewer = ({ obj }: ModelProps) => {
+	// State Management
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [object3D, setObject3D] = useState<THREE.Object3D | null>(null);
 
+	// Set obj when it changes
 	useEffect(() => {
 		if (obj) {
 			const loader = new OBJLoader();
@@ -40,6 +42,7 @@ const ModelViewer = ({ obj }: ModelProps) => {
 		<Canvas camera={{ position: [0, 0, 2] }}>
 			<ambientLight intensity={0.5} />
 			<directionalLight position={[10, 10, 10]} intensity={1} />
+			<directionalLight position={[-10, 10, -10]} intensity={1} />
 			{object3D && <primitive object={object3D} scale={1} />}
 			<OrbitControls
 				enableZoom={true}

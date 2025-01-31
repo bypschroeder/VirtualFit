@@ -34,7 +34,7 @@ if not os.path.exists(obj_filepath):
 
 clear_scene()
 
-obj = import_obj(obj_filepath, 0.001, 0.001)
+obj = import_obj(obj_filepath)
 mesh = obj.data
 
 for f in mesh.polygons:
