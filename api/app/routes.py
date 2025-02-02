@@ -21,6 +21,7 @@ from services.validation import (
     validate_obj,
     validate_garment,
     validate_size,
+    validate_quality,
 )
 from services.simulate_cloth import simulate_cloth
 
@@ -198,6 +199,10 @@ def try_on():
         current_app.logger.error("Invalid size provided")
         return jsonify({"error": "Invalid size provided"}), 400
 
+    quality = validate_quality(request.form)
+    if quality is None:
+        current_app.logger.error("Invalid quality provided")
+
     # Get garment key
     garment_upper_case = garment.replace("-", " ").title().replace(" ", "-")
     garment_key = f"{garment}/{gender}/{size}_{garment_upper_case}.blend"
@@ -210,6 +215,7 @@ def try_on():
         obj_key,
         garment_key,
         gender,
+        quality,
     ):
         current_app.logger.error("Failed to simulate cloth")
         return jsonify({"error": "Failed to simulate cloth"}), 500

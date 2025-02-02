@@ -139,6 +139,7 @@ export const usePreviewFiles = () => {
 export const useTryOnForm = () => {
 	const { obj } = useObjStore();
 	const { setFitObj, setIsFitObjLoading } = useFitObjStore();
+	const { gender } = useFormStore();
 	const { setTryOnError } = useErrorStore();
 
 	const form = useForm<z.infer<typeof tryonSchema>>({
@@ -146,8 +147,9 @@ export const useTryOnForm = () => {
 		defaultValues: {
 			obj: undefined,
 			garment: undefined,
-			gender: undefined,
+			gender: gender,
 			size: "M",
+			quality: 5,
 		},
 	});
 
@@ -172,6 +174,7 @@ export const useTryOnForm = () => {
 			formData.append("garment", values.garment);
 			formData.append("gender", values.gender);
 			formData.append("size", values.size);
+			formData.append("quality", String(values.quality));
 
 			const response = await fetch("http://api.localhost/try-on", {
 				method: "POST",

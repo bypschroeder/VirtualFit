@@ -37,4 +37,14 @@ export const tryonSchema = z.object({
 	),
 	gender: z.enum(["male", "female"]),
 	size: z.enum(["XS", "S", "M", "L", "XL", "XXL"]),
+	quality: z.preprocess(
+		(val) => (val === undefined || val === null ? null : val),
+		z
+			.number()
+			.min(1)
+			.max(10)
+			.refine((val) => val !== null, {
+				message: "Please select a quality",
+			})
+	),
 });

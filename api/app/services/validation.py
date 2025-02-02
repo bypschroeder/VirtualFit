@@ -155,3 +155,12 @@ def validate_size(form, s3, bucket_name, garment, gender):
         return None
 
     return size
+
+
+def validate_quality(form):
+    if "quality" not in form:
+        return None
+    quality = int(form["quality"])
+    if quality < 1 or quality > 10:
+        return None
+    return quality

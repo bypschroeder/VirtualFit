@@ -30,7 +30,15 @@ from smpl.avatar import (
     animate_shape_key,
     add_collision,
 )
-from clothing.fit_garment import add_garment, set_cloth, bake_cloth, post_process
+from clothing.fit_garment import (
+    add_garment,
+    create_proxy,
+    set_cloth,
+    bake_cloth,
+    bind_deform,
+    apply_deform,
+    post_process,
+)
 from _helpers.export import export_3D
 
 # Load the config file
@@ -47,6 +55,9 @@ parser.add_argument(
     "--garment", type=str, required=True, help="Path to the .blend file of the garment"
 )
 parser.add_argument(
+    "--quality", type=int, default=5, help="Quality of the cloth simulation (0-10)"
+)
+parser.add_argument(
     "--output", type=str, required=True, help="Path where the obj file should be saved"
 )
 args = parser.parse_args()
@@ -54,12 +65,15 @@ args = parser.parse_args()
 gender = args.gender
 obj_filepath = args.obj
 garment_filepath = args.garment
+quality = args.quality
 output_path = args.output
 
 if not os.path.exists(obj_filepath):
     raise FileNotFoundError(f"File {obj_filepath} not found.")
 if not os.path.exists(garment_filepath):
     raise FileNotFoundError(f"File {garment_filepath} not found.")
+if quality < 1 or quality > 10:
+    raise ValueError(f"Quality must be between 0 and 10, but is {quality}.")
 
 # Setup scene
 clear_scene()
@@ -91,19 +105,28 @@ animate_shape_key(avatar, 5, 50, shape_key_name)
 garment_name = garment_filepath.split("/")[-1].split(".")[0]
 garment = add_garment(garment_filepath, garment_name)
 scale_obj(garment, 10)
-bpy.context.view_layer.objects.active = garment
-bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+apply_all_transforms(garment)
 
+# Create proxy and simulate cloth
+cloth_quality = quality / 10  # decimation ratio is from 0 to 1
+proxy = create_proxy(garment, cloth_quality)  # proxy of garment
 garment_type = garment_name.split("_")[-1]
-set_cloth(garment, garment_type)
+set_cloth(proxy, garment_type)  # simulate cloth on proxy
+surface_mod = bind_deform(
+    proxy, garment
+)  # bind proxy to garment so it gets deformed based on proxy cloth simulation
 bake_cloth(0, 70)
 
-thickness_settings = {
-    "T-Shirt": -0.01,
-    "Sweatshirt": -0.03,
-    "Hoodie": -0.05,
-}
-post_process(garment, thickness_settings.get(garment_type), 2)
+apply_deform(garment, surface_mod, proxy)  # apply deform to garment
+
+garment_config = config["garment"].get(garment_type)
+if not garment_config:
+    raise ValueError(f"Garment type {garment_type} not found in config")
+
+thickness = garment_config.get("thickness")
+levels = garment_config.get("levels")
+shrink = garment_config.get("shrink")  # How much the seams are shrunk
+post_process(garment, thickness, shrink, levels)
 
 # Export
 scale_obj(avatar, 0.1)

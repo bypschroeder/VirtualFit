@@ -7,7 +7,7 @@ from minio.error import S3Error
 
 if len(sys.argv) < 4:
     print(
-        "Usage: python3 fetch_try_on.py <obj_bucket_name> <garment_bucket_name> <obj_key> <garment_key> <gender>"
+        "Usage: python3 fetch_try_on.py <obj_bucket_name> <garment_bucket_name> <obj_key> <garment_key> <gender> <quality>"
     )
     sys.exit(1)
 
@@ -16,6 +16,7 @@ GARMENT_BUCKET_NAME = sys.argv[2]
 OBJ_KEY = sys.argv[3]
 GARMENT_KEY = sys.argv[4]
 GENDER = sys.argv[5]
+QUALITY = sys.argv[6]
 
 DATA_DIR = "/data"
 
@@ -78,6 +79,8 @@ try:
             obj_filepath,
             "--garment",
             garment_filepath,
+            "--quality",
+            QUALITY,
             "--output",
             output_path,
         ],

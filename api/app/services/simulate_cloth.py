@@ -4,7 +4,13 @@ from flask import current_app
 
 
 def simulate_cloth(
-    docker_client, obj_bucket_name, garment_bucket_name, obj_key, garment_key, gender
+    docker_client,
+    obj_bucket_name,
+    garment_bucket_name,
+    obj_key,
+    garment_key,
+    gender,
+    quality,
 ):
     """Simulates the cloth using a Blender Docker container.
 
@@ -35,7 +41,7 @@ def simulate_cloth(
             ],
             entrypoint="/bin/bash",
             command=(
-                f"-c 'python3 ./minio_helpers/fetch_try_on.py {obj_bucket_name} {garment_bucket_name} {obj_key} {garment_key} {gender}'"
+                f"-c 'python3 ./minio_helpers/fetch_try_on.py {obj_bucket_name} {garment_bucket_name} {obj_key} {garment_key} {gender} {quality}'"
             ),
             network="virtualfit_app-network",
             detach=True,

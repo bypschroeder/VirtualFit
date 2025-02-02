@@ -40,34 +40,30 @@ output = args.output
 
 clear_scene()
 
-mesh_name = blend.split("/")[-1].split(".")[0]
-print(blend, mesh_name)
-obj = add_garment(blend, mesh_name)
+garment_name = blend.split("/")[-1].split(".")[0]
+print(blend, garment_name)
+garment = add_garment(blend, garment_name)
 
-scale_obj(obj, 10)
-bpy.context.view_layer.objects.active = obj
+scale_obj(garment, 10)
+bpy.context.view_layer.objects.active = garment
 bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
-local_bbox_center = 0.0125 * sum((Vector(b) for b in obj.bound_box), Vector())
-global_bbox_center = obj.matrix_world @ local_bbox_center
+local_bbox_center = 0.0125 * sum((Vector(b) for b in garment.bound_box), Vector())
+global_bbox_center = garment.matrix_world @ local_bbox_center
 
 bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
 
-obj.location = (0, 0, 0)
+garment.location = (0, 0, 0)
 
-if "T-Shirt" in mesh_name:
-    thickness = config["garment"]["T-Shirt"]["thickness"]
-    levels = config["garment"]["T-Shirt"]["levels"]
-elif "Sweatshirt" in mesh_name:
-    thickness = config["garment"]["Sweatshirt"]["thickness"]
-    levels = config["garment"]["Sweatshirt"]["levels"]
-elif "Hoodie" in mesh_name:
-    thickness = config["garment"]["Hoodie"]["thickness"]
-    levels = config["garment"]["Hoodie"]["levels"]
-else:
-    thickness = -0.01
+garment_type = garment_name.split("_")[-1]
+garment_config = config["garment"].get(garment_type)
+if not garment_config:
+    raise ValueError(f"Garment type {garment_type} not found in config")
 
-post_process(obj, thickness, levels)
+thickness = garment_config.get("thickness")
+levels = garment_config.get("levels")
+shrink = garment_config.get("shrink")  # How much the seams are shrunk
+post_process(garment, thickness, shrink, levels)
 
 setup_scene(
     camera_location=(0, -21, 0),

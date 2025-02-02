@@ -2,15 +2,18 @@
 	"garment": {
 		"T-Shirt": {
 			"thickness": -0.01,
-			"levels": 2
+			"levels": 2,
+			"shrink": -0.005
 		},
 		"Sweatshirt": {
 			"thickness": -0.03,
-			"levels": 2
+			"levels": 2,
+			"shrink": -0.01
 		},
 		"Hoodie": {
 			"thickness": -0.05,
-			"levels": 2
+			"levels": 2,
+			"shrink": -0.01
 		}
 	},
 	"export": {

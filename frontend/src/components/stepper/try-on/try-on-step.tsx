@@ -6,6 +6,7 @@ import { Form } from "@/components/ui/form";
 import { usePreviewFiles, useTryOnForm } from "@/lib/hooks";
 import useFitObjStore from "@/store/useFitObjStore";
 import ClothingPicker from "./clothing-picker";
+import QualityPicker from "./quality-picker";
 
 type ClothingType = "t-shirt" | "sweatshirt" | "hoodie" | "pants";
 
@@ -57,6 +58,7 @@ const TryOnStep = () => {
 						<ClothingPicker form={form} categories={categories} />
 					</CardContent>
 					<CardFooter className="flex flex-col justify-center items-center gap-6">
+						<QualityPicker form={form} disabled={isFitObjLoading} />
 						<SizePicker form={form} disabled={isFitObjLoading} />
 						<div className="flex justify-center items-center w-full">
 							<Button

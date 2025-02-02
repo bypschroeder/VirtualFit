@@ -103,7 +103,93 @@ def bake_cloth(start_frame, end_frame):
     bpy.context.scene.frame_current = end_frame
 
 
-def post_process(obj, thickness, levels):
+def create_proxy(garment, decimation_ratio=0.2):
+    """Creates a copy of the garment with decimation applied for faster simulation.
+
+    Args:
+        garment (bpy.types.Object): The garment object.
+        decimation_ratio (float, optional): The ratio of the decimation. Defaults to 0.2.
+
+    Returns:
+        bpy.types.Object: The proxy object.
+    """
+    proxy = garment.copy()
+    proxy.data = garment.data.copy()
+    proxy.name = garment.name + "_proxy"
+    bpy.context.collection.objects.link(proxy)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.context.view_layer.objects.active = proxy
+    proxy.select_set(True)
+
+    if "hoodie" in garment.name.lower():
+        bpy.ops.object.mode_set(mode="EDIT")
+
+        proxy.vertex_groups.active = proxy.vertex_groups[0]
+
+        bpy.ops.mesh.select_all(action="DESELECT")
+        bpy.ops.object.vertex_group_select()
+        bpy.ops.mesh.delete(type="FACE")
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+    decimate_mod = proxy.modifiers.new(name="Decimate", type="DECIMATE")
+    decimate_mod.ratio = decimation_ratio
+
+    bpy.ops.object.modifier_apply(modifier="Decimate")
+
+    for face in proxy.data.polygons:
+        face.use_smooth = True
+
+    proxy.hide_render = True
+
+    bpy.context.view_layer.objects.active = proxy
+    proxy.select_set(True)
+
+    return proxy
+
+
+def bind_deform(proxy, garment):
+    """Binds the proxy to the garment for deformation.
+
+    Args:
+        proxy (bpy.types.Object): The proxy object.
+        garment (bpy.types.Object): The garment object.
+
+    Returns:
+        bpy.types.Modifier: The surface deform modifier.
+    """
+    surface_mod = garment.modifiers.new(name="SurfaceDeform", type="SURFACE_DEFORM")
+    surface_mod.target = proxy
+
+    bpy.context.view_layer.objects.active = garment
+    bpy.ops.object.surfacedeform_bind(modifier=surface_mod.name)
+
+    return surface_mod
+
+
+def apply_deform(garment, surface_mod, proxy):
+    """Applies the surface deform modifier to the garment and deletes the proxy.
+
+    Args:
+        garment (bpy.types.Object): The garment object.
+        surface_mod (bpy.types.Modifier): The surface deform modifier.
+    """
+    bpy.context.view_layer.objects.active = garment
+    bpy.ops.object.modifier_apply(modifier=surface_mod.name)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    bpy.context.view_layer.objects.active = proxy
+    proxy.select_set(True)
+    bpy.ops.object.delete()
+
+
+def post_process(
+    obj,
+    thickness,
+    seam_shrink,
+    levels,
+):
     """Post-processes the garment by applying modifiers and modifying its geometry.
 
     Args:
@@ -136,7 +222,7 @@ def post_process(obj, thickness, levels):
     )
 
     bpy.ops.mesh.select_less()
-    bpy.ops.transform.shrink_fatten(value=-0.01, use_even_offset=True)
+    bpy.ops.transform.shrink_fatten(value=seam_shrink, use_even_offset=True)
 
     bmesh.update_edit_mesh(obj.data)
     bpy.ops.object.mode_set(mode="OBJECT")
