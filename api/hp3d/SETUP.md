@@ -12,17 +12,19 @@ This is an easy setup guide for the HierarchicalProbabilistic3DHuman repository 
 Place the Files like this:
 
     hp3d
-    ├── model_files                                  # Folder with model files
+    ├── model_files                                     # Folder with model files
     │   ├── smpl
-    │   │   ├── SMPL_NEUTRAL.pkl                     # Gender-neutral SMPL model
-    │   │   ├── SMPL_MALE.pkl                        # Male SMPL model
-    │   │   ├── SMPL_FEMALE.pkl                      # Female SMPL model
-    │   ├── poseMF_shapeGaussian_net_weights.tar     # Pose/Shape distribution predictor checkpoint
-    │   ├── pose_hrnet_w48_384x288.pth               # Pose2D HRNet checkpoint
-    │   ├── cocoplus_regressor.npy                   # Cocoplus joints regressor
-    │   ├── J_regressor_h36m.npy                     # Human3.6M joints regressor
-    │   ├── J_regressor_extra.npy                    # Extra joints regressor
-    │   └── UV_Processed.mat                         # DensePose UV coordinates for SMPL mesh
+    │   │   ├── SMPL_NEUTRAL.pkl                        # Gender-neutral SMPL model
+    │   │   ├── SMPL_MALE.pkl                           # Male SMPL model
+    │   │   ├── SMPL_FEMALE.pkl                         # Female SMPL model
+    │   ├── poseMF_shapeGaussian_net_weights.tar        # Pose/Shape distribution predictor checkpoint for neutral
+    │   ├── poseMF_shapeGaussian_net_weights_female.tar # Pose/Shape distribution predictor checkpoint for female
+    │   ├── poseMF_shapeGaussian_net_weights_male.tar   # Pose/Shape distribution predictor checkpoint for male
+    │   ├── pose_hrnet_w48_384x288.pth                  # Pose2D HRNet checkpoint
+    │   ├── cocoplus_regressor.npy                      # Cocoplus joints regressor
+    │   ├── J_regressor_h36m.npy                        # Human3.6M joints regressor
+    │   ├── J_regressor_extra.npy                       # Extra joints regressor
+    │   └── UV_Processed.mat                            # DensePose UV coordinates for SMPL mesh
     └── ...
 
 ### Docker
