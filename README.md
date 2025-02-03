@@ -9,7 +9,7 @@ A Docker setup for VirtualFit including the frontend, backend, blender, hp3d, mi
 
 ## Usage
 
-Before building or running the containers, make sure to look at the `README.md` (or `SETUP.md`) file in each folder for detailed instructions specific to each container.
+Before building or running the containers, make sure to look at the `README.md` (or `SETUP.md`) file in each folder for detailed instructions specific to each container. \
 **IMPORTANT**: For the `hp3d` container, you must download several required files and place them in the locations as specified in the `SETUP.md` file.
 
 To build:
