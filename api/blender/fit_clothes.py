@@ -108,16 +108,20 @@ scale_obj(garment, 10)
 apply_all_transforms(garment)
 
 # Create proxy and simulate cloth
-cloth_quality = quality / 10  # decimation ratio is from 0 to 1
-proxy = create_proxy(garment, cloth_quality)  # proxy of garment
 garment_type = garment_name.split("_")[-1]
-set_cloth(proxy, garment_type)  # simulate cloth on proxy
-surface_mod = bind_deform(
-    proxy, garment
-)  # bind proxy to garment so it gets deformed based on proxy cloth simulation
-bake_cloth(0, 70)
+if quality == 10:
+    set_cloth(garment, garment_type)
+    bake_cloth(0, 70)
+else:
+    cloth_quality = quality / 10  # decimation ratio is from 0 to 1
+    proxy = create_proxy(garment, cloth_quality)  # proxy of garment
+    set_cloth(proxy, garment_type)  # simulate cloth on proxy
+    surface_mod = bind_deform(
+        proxy, garment
+    )  # bind proxy to garment so it gets deformed based on proxy cloth simulation
+    bake_cloth(0, 70)
+    apply_deform(garment, surface_mod, proxy)  # apply deform to garment
 
-apply_deform(garment, surface_mod, proxy)  # apply deform to garment
 
 garment_config = config["garment"].get(garment_type)
 if not garment_config:
