@@ -45,10 +45,15 @@ The API is accessible at `http://localhost:3000/` or via `api.localhost` through
     - `image`: The image to generate the 3D model from
     - `gender`: The gender of the person in the image (male or female)
     - `height`: The height of the person in the image in meters (e.g 1.75)
+  - Returns:
+    - file: The 3D model as an OBJ file
 - `/generate-previews`: Generates preview images for the available garments
   - Method: `POST`
   - Body:
     - `gender`: The gender of the person the garments are for (male or female)
+  - Returns:
+    - `message`: Status message
+    - `presigned_urls`: A list of presigned URLs for the generated preview images
 - `/try-on`: Fits an garment to the generated 3D model
   - Method: `POST`
   - Body:
@@ -56,6 +61,9 @@ The API is accessible at `http://localhost:3000/` or via `api.localhost` through
     - `garment`: The garment to try on. Currently only `t-shirt`, `sweatshirt` and `hoodie` are supported
     - `gender`: The gender of the person the garment is for (male or female)
     - `size`: The size of the garment to try on (currently only XS - XXL)
+  - Returns:
+    - `obj`: The presigned URL for the fitted .obj file
+    - `mtl`: The presigned URL for associated .mtl file
 
 ## Notes
 
