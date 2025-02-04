@@ -40,6 +40,5 @@ mesh = obj.data
 for f in mesh.polygons:
     f.use_smooth = True
 
-format = config["export"]["3D"]["format"]
 smooth_obj_path = obj_filepath.replace(".obj", "_smooth.obj")
-export_3D(smooth_obj_path, format)
+export_3D(smooth_obj_path, False)

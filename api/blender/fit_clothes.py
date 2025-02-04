@@ -32,6 +32,7 @@ from smpl.avatar import (
 )
 from clothing.fit_garment import (
     add_garment,
+    set_color,
     create_proxy,
     set_cloth,
     bake_cloth,
@@ -57,6 +58,7 @@ parser.add_argument(
 parser.add_argument(
     "--quality", type=int, default=5, help="Quality of the cloth simulation (0-10)"
 )
+parser.add_argument("--color", type=str, default="#C2C2C2", help="Color of the garment")
 parser.add_argument(
     "--output", type=str, required=True, help="Path where the obj file should be saved"
 )
@@ -66,6 +68,7 @@ gender = args.gender
 obj_filepath = args.obj
 garment_filepath = args.garment
 quality = args.quality
+color = args.color
 output_path = args.output
 
 if not os.path.exists(obj_filepath):
@@ -104,6 +107,7 @@ animate_shape_key(avatar, 5, 50, shape_key_name)
 # Add garment and simulate cloth
 garment_name = garment_filepath.split("/")[-1].split(".")[0]
 garment = add_garment(garment_filepath, garment_name)
+set_color(garment, color)
 scale_obj(garment, 10)
 apply_all_transforms(garment)
 
@@ -135,5 +139,4 @@ post_process(garment, thickness, shrink, levels)
 # Export
 scale_obj(avatar, 0.1)
 scale_obj(garment, 0.1)
-format = config["export"]["3D"]["format"]
-export_3D(output_path, format)
+export_3D(output_path, materials=True)

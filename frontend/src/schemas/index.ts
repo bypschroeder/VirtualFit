@@ -47,4 +47,10 @@ export const tryonSchema = z.object({
 				message: "Please select a quality",
 			})
 	),
+	color: z.preprocess(
+		(val) => (val === undefined || val === null ? null : val),
+		z.string().refine((val) => val !== null, {
+			message: "Please select a color",
+		})
+	),
 });

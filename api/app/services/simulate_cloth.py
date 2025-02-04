@@ -11,16 +11,19 @@ def simulate_cloth(
     garment_key,
     gender,
     quality,
+    color,
 ):
     """Simulates the cloth using a Blender Docker container.
 
     Args:
         docker_client: The Docker client instance used to interact with the Docker daemon.
-        obj_bucket_name (_type_): The name of the Minio bucket where the obj file is stored.
-        garment_bucket_name (_type_): The name of the Minio bucket where the garment blend file is stored.
-        obj_key (_type_): The key of the obj file in the Minio bucket.
-        garment_key (_type_): The key of the garment blend file in the Minio bucket.
-        gender (_type_): The gender of the person for which the cloth is simulated. Must be 'male' or 'female'.
+        obj_bucket_name (string): The name of the Minio bucket where the obj file is stored.
+        garment_bucket_name (string): The name of the Minio bucket where the garment blend file is stored.
+        obj_key (string): The key of the obj file in the Minio bucket.
+        garment_key (string): The key of the garment blend file in the Minio bucket.
+        gender (string): The gender of the person for which the cloth is simulated. Must be 'male' or 'female'.
+        quality (int): The quality of the cloth simulation. Must be between 1 and 10.
+        color (string): The color of the garment. Must be a valid Hex color code.
 
     Returns:
         bool: True if the cloth simulation was successful, False otherwise.
@@ -41,7 +44,7 @@ def simulate_cloth(
             ],
             entrypoint="/bin/bash",
             command=(
-                f"-c 'python3 ./minio_helpers/fetch_try_on.py {obj_bucket_name} {garment_bucket_name} {obj_key} {garment_key} {gender} {quality}'"
+                f"-c 'python3 ./minio_helpers/fetch_try_on.py {obj_bucket_name} {garment_bucket_name} {obj_key} {garment_key} {gender} {quality} \"{color}\"'"
             ),
             network="virtualfit_app-network",
             detach=True,

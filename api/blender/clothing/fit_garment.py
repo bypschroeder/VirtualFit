@@ -36,6 +36,39 @@ def add_garment(garment_filepath, obj_name):
     return obj
 
 
+def set_color(garment, color):
+    """Sets the color of the garment.
+
+    Args:
+        garment (bpy.types.Object): The garment object.
+        color (str): The color of the garment in Hex format.
+    """
+    if not color.startswith("#"):
+        raise ValueError("Color must be in Hex format")
+
+    if not garment.data.materials:
+        mat = bpy.data.materials.new(name="Material")
+        garment.data.materials.append(mat)
+    else:
+        mat = garment.data.materials[0]
+
+    if not mat.use_nodes:
+        mat.use_nodes = True
+
+    nodes = mat.node_tree.nodes
+
+    bsdf = nodes.get("Principled BSDF")
+    if not bsdf:
+        bsdf = nodes.new("ShaderNodeBsdfPrincipled")
+        output = nodes.get("Material Output")
+        if output:
+            mat.node_tree.links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
+
+    color = color.lstrip("#")
+    rgb = tuple(int(color[i : i + 2], 16) / 255 for i in (0, 2, 4))
+    bsdf.inputs["Base Color"].default_value = (*rgb, 1)
+
+
 def set_cloth(garment, garment_type):
     """Sets the cloth modifier with its specified settings for the garment type.
 
@@ -230,8 +263,4 @@ def post_process(
     subdivide = obj.modifiers.new(name="Subdivide", type="SUBSURF")
     subdivide.levels = levels
     subdivide.render_levels = levels
-
-    # Recalculate Normals
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.normals_make_consistent(inside=False)
-    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.modifier_apply(modifier="Subdivide")

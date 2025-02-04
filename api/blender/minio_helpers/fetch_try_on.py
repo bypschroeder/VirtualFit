@@ -5,18 +5,21 @@ import shutil
 from minio import Minio
 from minio.error import S3Error
 
-if len(sys.argv) < 4:
+if len(sys.argv) < 8:
     print(
-        "Usage: python3 fetch_try_on.py <obj_bucket_name> <garment_bucket_name> <obj_key> <garment_key> <gender> <quality>"
+        "Usage: python3 fetch_try_on.py <obj_bucket_name> <garment_bucket_name> <obj_key> <garment_key> <gender> <quality> <color>"
     )
     sys.exit(1)
 
+
+print(sys.argv)
 OBJ_BUCKET_NAME = sys.argv[1]
 GARMENT_BUCKET_NAME = sys.argv[2]
 OBJ_KEY = sys.argv[3]
 GARMENT_KEY = sys.argv[4]
 GENDER = sys.argv[5]
 QUALITY = sys.argv[6]
+COLOR = sys.argv[7]
 
 DATA_DIR = "/data"
 
@@ -62,8 +65,8 @@ except S3Error as e:
     sys.exit(1)
 
 file_name = f"{os.path.splitext(os.path.basename(GARMENT_KEY))[0]}.obj"
-
 output_path = os.path.join(DATA_DIR, file_name)
+
 print("Running blender script...")
 try:
     subprocess.run(
@@ -81,6 +84,8 @@ try:
             garment_filepath,
             "--quality",
             QUALITY,
+            "--color",
+            COLOR,
             "--output",
             output_path,
         ],
@@ -91,11 +96,15 @@ except subprocess.CalledProcessError as e:
     print(f"Error: Failed to run blender script: {e}")
     sys.exit(1)
 
-print(f"Uploading fitted obj to {OBJ_BUCKET_NAME}...")
-upload_path = os.path.join(OBJ_KEY.split("/")[0], file_name)
+print(f"Uploading fitted glb to {OBJ_BUCKET_NAME}...")
+upload_path_obj = os.path.join(OBJ_KEY.split("/")[0], file_name)
+upload_path_mtl = os.path.join(OBJ_KEY.split("/")[0], file_name.replace(".obj", ".mtl"))
 try:
-    client.fput_object(OBJ_BUCKET_NAME, upload_path, output_path)
-    print(f"File {output_path} uploaded successfully to {upload_path}")
+    client.fput_object(OBJ_BUCKET_NAME, upload_path_obj, output_path)
+    client.fput_object(
+        OBJ_BUCKET_NAME, upload_path_mtl, output_path.replace(".obj", ".mtl")
+    )
+    print(f"File {output_path} uploaded successfully to {upload_path_obj}")
 except S3Error as e:
     print(f"Error: Failed to upload {output_path} to {OBJ_BUCKET_NAME}: {e}")
     sys.exit(1)

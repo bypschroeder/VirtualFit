@@ -29,7 +29,7 @@ interface QualityPickerProps {
 
 const QualityPicker = ({ form, disabled }: QualityPickerProps) => {
 	return (
-		<div className="flex justify-center items-center gap-4 -mt-4">
+		<div className="flex justify-center items-center gap-4">
 			<FormField
 				control={form.control}
 				name="quality"

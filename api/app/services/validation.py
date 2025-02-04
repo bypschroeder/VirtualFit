@@ -1,4 +1,5 @@
 import os
+import re
 from minio.error import S3Error
 from flask import current_app
 
@@ -60,7 +61,7 @@ def validate_obj(files, s3, bucket_name):
     Args:
         files: The form files containing the obj file.
         s3: The Minio client instance used to interact with the Minio object storage.
-        bucket_name (_type_): The name of the Minio bucket where the obj file is stored.
+        bucket_name (string): The name of the Minio bucket where the obj file is stored.
 
     Returns:
         str: The key of the obj file in the Minio bucket, or None if the validation failed.
@@ -91,7 +92,7 @@ def validate_garment(form, s3, bucket_name):
     Args:
         form: The form containing the garment field.
         s3: The Minio client instance used to interact with the Minio object storage.
-        bucket_name (_type_): The name of the Minio bucket where the garment blend file is stored.
+        bucket_name (string): The name of the Minio bucket where the garment blend file is stored.
 
     Returns:
         str: The name of the garment, or None if the validation failed.
@@ -123,9 +124,9 @@ def validate_size(form, s3, bucket_name, garment, gender):
     Args:
         form: The form containing the size field.
         s3: The Minio client instance used to interact with the Minio object storage.
-        bucket_name (_type_): The name of the Minio bucket where the garment blend file is stored.
-        garment (_type_): The name of the garment.
-        gender (_type_): The gender of the person. Must be 'male' or 'female'.
+        bucket_name (string): The name of the Minio bucket where the garment blend file is stored.
+        garment (string): The name of the garment.
+        gender (string): The gender of the person. Must be 'male' or 'female'.
 
     Returns:
         str: The validated size, or None if the validation failed.
@@ -164,3 +165,17 @@ def validate_quality(form):
     if quality < 1 or quality > 10:
         return None
     return quality
+
+
+def validate_color(form):
+    if "color" not in form:
+        return None
+    color = form["color"]
+    if not color.startswith("#"):
+        return None
+    if len(color) not in (4, 7):
+        return None
+    hex_digits = color[1:]
+    if not re.match(r"^[0-9a-fA-F]+$", hex_digits):
+        return None
+    return color

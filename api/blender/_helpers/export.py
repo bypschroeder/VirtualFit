@@ -1,22 +1,14 @@
 import bpy
 
 
-def export_3D(output_path, file_format):
+def export_3D(output_path, materials=False):
     """Exports the 3D model to the specified file format.
 
     Args:
-        filepath (str): The path where the 3D model should be exported.
-        file_format (str): The file format of the exported 3D model. Must be 'OBJ' or 'USD'.
-
-    Raises:
-        ValueError: If the file format is not 'OBJ' or 'USD'.
+        output_path (str): The path where the 3D model should be exported.
+        materials (bool, optional): Whether to export the materials. Defaults to False.
     """
-    if file_format == "OBJ":
-        bpy.ops.wm.obj_export(filepath=output_path, export_materials=False)
-    elif file_format == "USD":
-        bpy.ops.wm.usd_export(filepath=output_path, export_materials=False)
-    else:
-        raise ValueError(f"Invalid file format: {file_format}")
+    bpy.ops.wm.obj_export(filepath=output_path, export_materials=materials)
 
 
 def export_preview(output_path, resolution_x, resolution_y, samples):

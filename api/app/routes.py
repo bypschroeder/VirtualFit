@@ -22,6 +22,7 @@ from services.validation import (
     validate_garment,
     validate_size,
     validate_quality,
+    validate_color,
 )
 from services.simulate_cloth import simulate_cloth
 
@@ -128,7 +129,9 @@ def generate_previews():
     # Return presigned URLs if no missing previews
     if not missing_previews:
         try:
-            presigned_urls = generate_presigned_urls(preview_files)
+            presigned_urls = generate_presigned_urls(
+                current_app.config["BUCKETS"][1], preview_files
+            )
         except Exception as e:
             current_app.logger.error(f"Failed to generate presigned URLs: {e}")
             return jsonify({"error": e}), 500
@@ -161,7 +164,7 @@ def generate_previews():
         and obj.object_name.endswith(".png")
         and os.path.basename(obj.object_name) == f"{gender}.png"
     ]
-    presigned_urls = generate_presigned_urls(previews)
+    presigned_urls = generate_presigned_urls(current_app.config["BUCKETS"][1], previews)
 
     return (
         jsonify(
@@ -202,6 +205,12 @@ def try_on():
     quality = validate_quality(request.form)
     if quality is None:
         current_app.logger.error("Invalid quality provided")
+        return jsonify({"error": "Invalid quality provided"}), 400
+
+    color = validate_color(request.form)
+    if color is None:
+        current_app.logger.error("Invalid color provided")
+        return jsonify({"error": "Invalid color provided"}), 400
 
     # Get garment key
     garment_upper_case = garment.replace("-", " ").title().replace(" ", "-")
@@ -216,16 +225,20 @@ def try_on():
         garment_key,
         gender,
         quality,
+        color,
     ):
         current_app.logger.error("Failed to simulate cloth")
         return jsonify({"error": "Failed to simulate cloth"}), 500
 
     # Get avatar with fitted garment
-    file_name = f"{os.path.splitext(os.path.basename(garment_key))[0]}.obj"
-    fit_obj_key = os.path.join(os.path.dirname(obj_key), file_name)
-    fit_obj_path = os.path.join("tmp", file_name)
+    obj_file_name = f"{os.path.splitext(os.path.basename(garment_key))[0]}.obj"
+    fit_obj_key = os.path.join(os.path.dirname(obj_key), obj_file_name)
+    mtl_file_name = f"{os.path.splitext(os.path.basename(garment_key))[0]}.mtl"
+    fit_mtl_key = os.path.join(os.path.dirname(obj_key), mtl_file_name)
 
-    s3.fget_object(current_app.config["BUCKETS"][0], fit_obj_key, fit_obj_path)
+    presigned_urls = generate_presigned_urls(
+        current_app.config["BUCKETS"][0], [fit_obj_key, fit_mtl_key]
+    )
 
-    # Return full obj of avatar and fitted garment
-    return send_file(fit_obj_path, as_attachment=True), 200
+    # Return full obj and mtl of avatar and fitted garment
+    return jsonify({"obj": presigned_urls[0], "mtl": presigned_urls[1]}), 200

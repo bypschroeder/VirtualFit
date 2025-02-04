@@ -23,7 +23,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 const ModelDisplay = () => {
 	// State Management
 	const { obj, setObj, isObjLoading } = useObjStore();
-	const { fitObj, setFitObj, isFitObjLoading } = useFitObjStore();
+	const { fitObj, fitMtl, setFitObj, setFitMtl, isFitObjLoading } =
+		useFitObjStore();
 	const { setImage } = useImageStore();
 	const isLoading = isObjLoading || isFitObjLoading;
 
@@ -54,7 +55,9 @@ const ModelDisplay = () => {
 								<AlertDialogCancel>Cancel</AlertDialogCancel>
 								<AlertDialogAction
 									className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-									onClick={() => handleReset(setObj, setFitObj, setImage)}
+									onClick={() =>
+										handleReset(setObj, setFitObj, setFitMtl, setImage)
+									}
 								>
 									Reset
 								</AlertDialogAction>
@@ -65,7 +68,7 @@ const ModelDisplay = () => {
 						<HoverCardTrigger>
 							<Button
 								size={"icon"}
-								onClick={() => handleDownload(fitObj || obj, !!fitObj)}
+								onClick={() => handleDownload(fitObj || obj, fitMtl, !!fitObj)}
 							>
 								<Download />
 							</Button>
@@ -79,7 +82,7 @@ const ModelDisplay = () => {
 					<LoadingSpinner />
 				</div>
 			) : fitObj ? (
-				<ModelViewer obj={fitObj} />
+				<ModelViewer obj={fitObj} mtl={fitMtl} />
 			) : obj ? (
 				<ModelViewer obj={obj} />
 			) : (

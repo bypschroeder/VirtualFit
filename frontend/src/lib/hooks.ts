@@ -138,8 +138,8 @@ export const usePreviewFiles = () => {
 
 export const useTryOnForm = () => {
 	const { obj } = useObjStore();
-	const { setFitObj, setIsFitObjLoading } = useFitObjStore();
-	const { gender } = useFormStore();
+	const { setFitObj, setFitMtl, setIsFitObjLoading } = useFitObjStore();
+	const { gender, color } = useFormStore();
 	const { setTryOnError } = useErrorStore();
 
 	const form = useForm<z.infer<typeof tryonSchema>>({
@@ -150,6 +150,7 @@ export const useTryOnForm = () => {
 			gender: gender,
 			size: "M",
 			quality: 5,
+			color: color,
 		},
 	});
 
@@ -175,6 +176,7 @@ export const useTryOnForm = () => {
 			formData.append("gender", values.gender);
 			formData.append("size", values.size);
 			formData.append("quality", String(values.quality));
+			formData.append("color", color);
 
 			const response = await fetch("http://api.localhost/try-on", {
 				method: "POST",
@@ -184,7 +186,9 @@ export const useTryOnForm = () => {
 			if (!response.ok)
 				throw new Error(`Error: ${response.status} - ${response.statusText}`);
 
-			setFitObj(await response.text());
+			const data = await response.json();
+			setFitObj(data.obj);
+			setFitMtl(data.mtl);
 		} catch (error) {
 			setTryOnError("Error generating the virtual fit. Please try again.");
 			console.error("Error generating the virtual fit", error);

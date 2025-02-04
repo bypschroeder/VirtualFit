@@ -136,7 +136,7 @@ def generate_preview_imgs(docker_client, bucket_name, missing_previews):
         return False
 
 
-def generate_presigned_urls(file_paths):
+def generate_presigned_urls(bucket_name, file_paths):
     """Generates presigned URLs for the given file paths.
 
     Args:
@@ -150,9 +150,7 @@ def generate_presigned_urls(file_paths):
     """
     expiration_time = timedelta(minutes=10)
     presigned_urls = [
-        s3.presigned_get_object(
-            current_app.config["BUCKETS"][1], file_path, expiration_time
-        )
+        s3.presigned_get_object(bucket_name, file_path, expiration_time)
         for file_path in file_paths
     ]
     external_url_base = "http://minio.localhost"

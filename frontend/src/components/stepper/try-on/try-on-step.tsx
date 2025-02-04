@@ -3,9 +3,12 @@ import SizePicker from "@/components/stepper/try-on/size-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { usePreviewFiles, useTryOnForm } from "@/lib/hooks";
 import useFitObjStore from "@/store/useFitObjStore";
+import useFormStore from "@/store/useFormStore";
 import ClothingPicker from "./clothing-picker";
+import { ColorPicker } from "./color-picker";
 import QualityPicker from "./quality-picker";
 
 type ClothingType = "t-shirt" | "sweatshirt" | "hoodie" | "pants";
@@ -21,6 +24,7 @@ const TryOnStep = () => {
 	const { previewFiles, loading } = usePreviewFiles();
 	const { form, onSubmit } = useTryOnForm();
 	const { isFitObjLoading } = useFitObjStore();
+	const { color, setColor } = useFormStore();
 
 	const categories = [
 		{
@@ -58,7 +62,18 @@ const TryOnStep = () => {
 						<ClothingPicker form={form} categories={categories} />
 					</CardContent>
 					<CardFooter className="flex flex-col justify-center items-center gap-6">
-						<QualityPicker form={form} disabled={isFitObjLoading} />
+						<div className="flex justify-center items-center gap-4">
+							<QualityPicker form={form} disabled={isFitObjLoading} />
+							<div className="flex flex-col gap-2">
+								<Label htmlFor="color">Color</Label>
+								<ColorPicker
+									id="color"
+									value={color || "#FFFFFF"}
+									onChange={(value) => setColor(value)}
+									disabled={isFitObjLoading}
+								/>
+							</div>
+						</div>
 						<SizePicker form={form} disabled={isFitObjLoading} />
 						<div className="flex justify-center items-center w-full">
 							<Button

@@ -17,9 +17,6 @@
 		}
 	},
 	"export": {
-		"3D": {
-			"format": "OBJ"
-		},
 		"preview": {
 			"resolution_x": 540,
 			"resolution_y": 540,
