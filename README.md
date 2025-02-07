@@ -25,6 +25,15 @@ To run :
 docker-compose --profile app up -d
 ```
 
+## Used Repositories and Docker Images
+
+- [HierarchicalProbabilistic3D Repository](https://github.com/akashsengupta1997/HierarchicalProbabilistic3DHuman) (hp3d)
+- [NVIDIA Cuda Docker Image](https://hub.docker.com/r/nvidia/cuda)
+- [Python Docker Image](https://hub.docker.com/_/python)
+- [Blender Docker Image](https://hub.docker.com/r/linuxserver/blender)
+- [Minio Docker Image](https://hub.docker.com/r/minio/minio)
+- [Nginx Docker Image](https://hub.docker.com/_/nginx)
+
 ## Docker-compose info
 
 ### Profiles
