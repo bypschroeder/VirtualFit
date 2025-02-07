@@ -48,6 +48,10 @@ To use the blender scripts, you can run simply run the following commands. Howev
 - Fetch garments and preview images and generate presigned URLs: `python3 ./minio_helpers/fetch_generate_preview.py <bucket_name> <missing_previews>`
 - Fetch garment/avatar and fit garment to avatar: `python3 ./minio_helpers/fetch_try_on.py <obj_bucket_name> <garment_bucket_name> <obj_key> <garment_key> <gender>`
 
+## Configs
+
+The configs are located in the `config` folder. There is a base config file `config.json` which stores the general settings for the scripts. For each garment, a seperate config file is required. The config files are located in the `config/garments` folder. These store individual settings for each garment.
+
 ## Notes
 
 - The container needs to be run with NVIDIA GPU support. This can be done by adding `--runtime=nvidia` and `-e NVIDIA_VISIBLE_DEVICES=all` to the docker run command.

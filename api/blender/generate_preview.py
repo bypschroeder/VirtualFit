@@ -21,57 +21,75 @@ from _helpers.export import export_preview
 from clothing.fit_garment import add_garment, post_process
 from config.config_loader import load_config
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-add_subdirs_to_sys_path(script_dir)
-
-config = load_config()
-
-bpy.context.preferences.view.show_splash = False
-
+# Parse command line arguments
 parser = ArgumentParserForBlender()
 parser.add_argument("--blend", type=str, required=True, help="Path to the blend file")
 parser.add_argument(
     "--output", type=str, required=True, help="Path where to preview should be saved"
 )
-args = parser.parse_args()
 
+args = parser.parse_args()
 blend = args.blend
 output = args.output
 
-clear_scene()
+# Load base config
+config = load_config(os.path.abspath("./config/config.json"))
 
-garment_name = blend.split("/")[-1].split(".")[0]
-print(blend, garment_name)
-garment = add_garment(blend, garment_name)
+# Set base constants
+SCALE = config["scale"]
+CAMERA_LOCATION = config["scene"]["preview"]["camera_location"]
+CAMERA_ROTATION = config["scene"]["preview"]["camera_rotation"]
+LIGHT_ROTATION = config["scene"]["preview"]["light_rotation"]
+RESOLUTION_X = config["export"]["preview"]["resolution_x"]
+RESOLUTION_Y = config["export"]["preview"]["resolution_y"]
+SAMPLES = config["export"]["preview"]["samples"]
 
-scale_obj(garment, 10)
-bpy.context.view_layer.objects.active = garment
-bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+# Load garment config
+garment_name = os.path.basename(blend).split(".")[0]
+garment_type = garment_name.split("_")[-1].lower()
+garment_config = load_config(os.path.abspath(f"./config/garments/{garment_type}.json"))
 
-local_bbox_center = 0.0125 * sum((Vector(b) for b in garment.bound_box), Vector())
-global_bbox_center = garment.matrix_world @ local_bbox_center
-
-bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
-
-garment.location = (0, 0, 0)
-
-garment_type = garment_name.split("_")[-1]
-garment_config = config["garment"].get(garment_type)
 if not garment_config:
     raise ValueError(f"Garment type {garment_type} not found in config")
 
-thickness = garment_config.get("thickness")
-levels = garment_config.get("levels")
-shrink = garment_config.get("shrink")  # How much the seams are shrunk
-post_process(garment, thickness, shrink, levels)
+# Set garment constants
+SEAMS_BEVEL = garment_config["post_process"]["seams_bevel"]
+SHRINK_SEAMS = garment_config["post_process"]["shrink_seams"]
+THICKNESS = garment_config["post_process"]["thickness"]
+SUBDIVISIONS = garment_config["post_process"]["subdivisions"]
 
+# Disable the Blender splash screen
+bpy.context.preferences.view.show_splash = False
+
+# Clear the scene
+clear_scene()
+
+# Add the garment
+print(blend, garment_name)
+garment = add_garment(blend, garment_name)
+
+# Scale the garment
+scale_obj(garment, SCALE)
+bpy.context.view_layer.objects.active = garment
+bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+# Set the origin to the garment's bounding box center
+local_bbox_center = 0.0125 * sum((Vector(b) for b in garment.bound_box), Vector())
+global_bbox_center = garment.matrix_world @ local_bbox_center
+bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY", center="BOUNDS")
+
+# Set the garment's location to (0, 0, 0)
+garment.location = (0, 0, 0)
+
+# Apply post-processing
+post_process(garment, SEAMS_BEVEL, SHRINK_SEAMS, THICKNESS, SUBDIVISIONS)
+
+# Setup the scene
 setup_scene(
-    camera_location=(0, -21, 0),
-    camera_rotation=(90, 0, 0),
-    light_rotation=(90, 0, 0),
+    camera_location=tuple(CAMERA_LOCATION),
+    camera_rotation=tuple(CAMERA_ROTATION),
+    light_rotation=tuple(LIGHT_ROTATION),
 )
 
-resolution_x = config["export"]["preview"]["resolution_x"]
-resolution_y = config["export"]["preview"]["resolution_y"]
-samples = config["export"]["preview"]["samples"]
-export_preview(output, resolution_x, resolution_y, samples)
+# Export the preview
+export_preview(output, RESOLUTION_X, RESOLUTION_Y, SAMPLES)

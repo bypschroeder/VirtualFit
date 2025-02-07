@@ -42,12 +42,6 @@ from clothing.fit_garment import (
 )
 from _helpers.export import export_3D
 
-# Load the config file
-config = load_config()
-
-# Disable the Blender splash screen
-bpy.context.preferences.view.show_splash = False
-
 # Parse command line arguments
 parser = ArgumentParserForBlender()
 parser.add_argument("--gender", type=str, required=True, help="Gender of the avatar")
@@ -62,8 +56,8 @@ parser.add_argument("--color", type=str, default="#C2C2C2", help="Color of the g
 parser.add_argument(
     "--output", type=str, required=True, help="Path where the obj file should be saved"
 )
-args = parser.parse_args()
 
+args = parser.parse_args()
 gender = args.gender
 obj_filepath = args.obj
 garment_filepath = args.garment
@@ -78,65 +72,91 @@ if not os.path.exists(garment_filepath):
 if quality < 1 or quality > 10:
     raise ValueError(f"Quality must be between 0 and 10, but is {quality}.")
 
+# Load base config
+config = load_config(os.path.abspath("./config/config.json"))
+
+# Set base constants
+BASE_MESH_PATH = config["base_mesh_path"]
+AVATAR_THICKNESS_INNER = config["avatar"]["thickness_inner"]
+AVATAR_THICKNESS_OUTER = config["avatar"]["thickness_outer"]
+SCALE = config["scale"]
+ANIMATION_START_FRAME = config["animation"]["start_frame"]
+ANIMATION_END_FRAME = config["animation"]["end_frame"]
+
+# Load garment config
+garment_name = os.path.basename(garment_filepath).split(".")[0]
+garment_type = garment_name.split("_")[-1].lower()
+garment_config = load_config(os.path.abspath(f"./config/garments/{garment_type}.json"))
+
+# Set garment constants
+CLOTH_CONFIG = garment_config["cloth_settings"]
+SEAMS_BEVEL = garment_config["post_process"]["seams_bevel"]
+SHRINK_SEAMS = garment_config["post_process"]["shrink_seams"]
+THICKNESS = garment_config["post_process"]["thickness"]
+SUBDIVISIONS = garment_config["post_process"]["subdivisions"]
+
+# Disable the Blender splash screen
+bpy.context.preferences.view.show_splash = False
+
 # Setup scene
 clear_scene()
-setup_scene(
-    camera_location=(0, -34, -10.5),
-    camera_rotation=(90, 0, 0),
-    light_rotation=(90, 0, 0),
-)
+# setup_scene(
+#     camera_location=(0, -34, -10.5),
+#     camera_rotation=(90, 0, 0),
+#     light_rotation=(90, 0, 0),
+# ) # Not needed if no image is rendered
 
-# Create avatar and animate to generated obj
+# Create base avatar
 avatar = import_blend(
-    f"/vf_blender/smpl/base_mesh/SMPL_{gender}.blend",
+    f"{BASE_MESH_PATH}/SMPL_{gender}.blend",
     f"SMPL_{gender}",
 )
-add_collision(avatar, 0.001, 0.001)
-scale_obj(avatar, 10)
+add_collision(avatar, AVATAR_THICKNESS_INNER, AVATAR_THICKNESS_OUTER)
+scale_obj(avatar, SCALE)
 snap_to_ground_plane(avatar)
 apply_all_transforms(avatar)
+
+# Import generated obj
 generated_obj = import_obj(obj_filepath)
-scale_obj(generated_obj, 10)
+scale_obj(generated_obj, SCALE)
 snap_to_ground_plane(generated_obj)
 apply_all_transforms(generated_obj)
 
+# Join the avatar and generated obj as shape keys
 shape_key_name = "Generated_Pose"
 join_as_shapes(avatar, generated_obj, shape_key_name)
-animate_shape_key(avatar, 5, 50, shape_key_name)
+animate_shape_key(
+    avatar, ANIMATION_START_FRAME + 5, ANIMATION_END_FRAME, shape_key_name
+)
 
 # Add garment and simulate cloth
-garment_name = garment_filepath.split("/")[-1].split(".")[0]
 garment = add_garment(garment_filepath, garment_name)
 set_color(garment, color)
-scale_obj(garment, 10)
+scale_obj(garment, SCALE)
 apply_all_transforms(garment)
 
 # Create proxy and simulate cloth
 garment_type = garment_name.split("_")[-1]
 if quality == 10:
-    set_cloth(garment, garment_type)
-    bake_cloth(0, 70)
+    set_cloth(garment, CLOTH_CONFIG)
+    bake_cloth(ANIMATION_START_FRAME, ANIMATION_END_FRAME)
 else:
     cloth_quality = quality / 10  # decimation ratio is from 0 to 1
     proxy = create_proxy(garment, cloth_quality)  # proxy of garment
-    set_cloth(proxy, garment_type)  # simulate cloth on proxy
+    set_cloth(proxy, CLOTH_CONFIG)  # simulate cloth on proxy
     surface_mod = bind_deform(
         proxy, garment
     )  # bind proxy to garment so it gets deformed based on proxy cloth simulation
-    bake_cloth(0, 70)
+    bake_cloth(ANIMATION_START_FRAME, ANIMATION_END_FRAME)
     apply_deform(garment, surface_mod, proxy)  # apply deform to garment
 
 
-garment_config = config["garment"].get(garment_type)
 if not garment_config:
     raise ValueError(f"Garment type {garment_type} not found in config")
 
-thickness = garment_config.get("thickness")
-levels = garment_config.get("levels")
-shrink = garment_config.get("shrink")  # How much the seams are shrunk
-post_process(garment, thickness, shrink, levels)
+post_process(garment, SEAMS_BEVEL, SHRINK_SEAMS, THICKNESS, SUBDIVISIONS)
 
 # Export
-scale_obj(avatar, 0.1)
-scale_obj(garment, 0.1)
+scale_obj(avatar, 1 / SCALE)
+scale_obj(garment, 1 / SCALE)
 export_3D(output_path, materials=True)

@@ -1,0 +1,29 @@
+{
+	"cloth_settings": {
+		"quality": 8,
+		"time_scale": 1,
+		"mass": 0.5,
+		"air_damping": 1,
+		"tension_stiffness": 25,
+		"compression_stiffness": 25,
+		"shear_stiffness": 25,
+		"bending_stiffness": 0.8,
+		"tension_damping": 7,
+		"compression_damping": 7,
+		"shear_damping": 7,
+		"bending_damping": 0.7,
+		"vertex_group_mass": null,
+		"pin_stiffness": 0,
+		"shrink_min": 0,
+		"collision_quality": 4,
+		"distance_min": 0.03,
+		"use_self_collision": true,
+		"self_distance_min": 0.002
+	},
+	"post_process": {
+		"seams_bevel": 0.01,
+		"shrink_seams": -0.01,
+		"thickness": -0.05,
+		"subdivisions": 2
+	}
+}

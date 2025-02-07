@@ -14,31 +14,35 @@ def add_subdirs_to_sys_path(root_dir):
 script_dir = os.path.dirname(os.path.abspath(__file__))
 add_subdirs_to_sys_path(script_dir)
 
-from config.config_loader import load_config
 from _helpers.ArgumentParserForBlender import ArgumentParserForBlender
 from _helpers.scene import clear_scene
 from smpl.avatar import import_obj
 from _helpers.export import export_3D
 
-config = load_config()
-
-bpy.context.preferences.view.show_splash = False
-
+# Parse command line arguments
 parser = ArgumentParserForBlender()
 parser.add_argument("--obj", type=str, required=True, help="Path to the .obj file")
-args = parser.parse_args()
 
+args = parser.parse_args()
 obj_filepath = args.obj
+
 if not os.path.exists(obj_filepath):
     raise FileNotFoundError(f"File {obj_filepath} not found.")
 
+# Disable the Blender splash screen
+bpy.context.preferences.view.show_splash = False
+
+# Clear the scene
 clear_scene()
 
+# Import the obj file
 obj = import_obj(obj_filepath)
 mesh = obj.data
 
+# Smooth the mesh
 for f in mesh.polygons:
     f.use_smooth = True
 
+# Export the smoothed obj file
 smooth_obj_path = obj_filepath.replace(".obj", "_smooth.obj")
 export_3D(smooth_obj_path, False)

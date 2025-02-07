@@ -1,11 +1,12 @@
-# Docker setup for the VirtualFit Project
+# VirtualFit
 
-A Docker setup for VirtualFit including the frontend, backend, blender, hp3d, minio and nginx containers.
+VirtualFit is a 3D virtual changing room where you can upload a picture of yourself, from which a 3D model is generated and clothes can be tried on.
 
 ## Requirements
 
-- https://docs.nvidia.com/cuda/wsl-user-guide/index.html
-- https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+- [Docker](https://docs.docker.com/get-docker/)
+- [CUDA on WSL](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
+- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
 
 ## Usage
 

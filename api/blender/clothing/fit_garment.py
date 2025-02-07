@@ -42,6 +42,9 @@ def set_color(garment, color):
     Args:
         garment (bpy.types.Object): The garment object.
         color (str): The color of the garment in Hex format.
+
+    Raises:
+        ValueError: If the color is not in Hex format.
     """
     if not color.startswith("#"):
         raise ValueError("Color must be in Hex format")
@@ -69,7 +72,7 @@ def set_color(garment, color):
     bsdf.inputs["Base Color"].default_value = (*rgb, 1)
 
 
-def set_cloth(garment, garment_type):
+def set_cloth(garment, cloth_config):
     """Sets the cloth modifier with its specified settings for the garment type.
 
     The cloth settings are specified in the cloth_config.json file.
@@ -78,10 +81,6 @@ def set_cloth(garment, garment_type):
         garment (bpy.types.Object): The garment object.
         garment_type (str): The type of the garment. Must be 'T-Shirt', 'Sweatshirt', or 'Hoodie'.
     """
-    with open("./clothing/cloth_config.json", "r") as f:
-        cloth_config = json.load(f)
-    garment_config = cloth_config[garment_type]
-
     cloth_modifier = garment.modifiers.get("Cloth")
 
     if not cloth_modifier:
@@ -90,28 +89,28 @@ def set_cloth(garment, garment_type):
     cloth_settings = cloth_modifier.settings
     collision_settings = cloth_modifier.collision_settings
 
-    cloth_settings.quality = garment_config["quality"]
-    cloth_settings.time_scale = garment_config["time_scale"]
-    cloth_settings.mass = garment_config["mass"]
-    cloth_settings.air_damping = garment_config["air_damping"]
-    cloth_settings.tension_stiffness = garment_config["tension_stiffness"]
-    cloth_settings.compression_stiffness = garment_config["compression_stiffness"]
-    cloth_settings.shear_stiffness = garment_config["shear_stiffness"]
-    cloth_settings.bending_stiffness = garment_config["bending_stiffness"]
-    cloth_settings.tension_damping = garment_config["tension_damping"]
-    cloth_settings.compression_damping = garment_config["compression_damping"]
-    cloth_settings.shear_damping = garment_config["shear_damping"]
-    cloth_settings.bending_damping = garment_config["bending_damping"]
+    cloth_settings.quality = cloth_config["quality"]
+    cloth_settings.time_scale = cloth_config["time_scale"]
+    cloth_settings.mass = cloth_config["mass"]
+    cloth_settings.air_damping = cloth_config["air_damping"]
+    cloth_settings.tension_stiffness = cloth_config["tension_stiffness"]
+    cloth_settings.compression_stiffness = cloth_config["compression_stiffness"]
+    cloth_settings.shear_stiffness = cloth_config["shear_stiffness"]
+    cloth_settings.bending_stiffness = cloth_config["bending_stiffness"]
+    cloth_settings.tension_damping = cloth_config["tension_damping"]
+    cloth_settings.compression_damping = cloth_config["compression_damping"]
+    cloth_settings.shear_damping = cloth_config["shear_damping"]
+    cloth_settings.bending_damping = cloth_config["bending_damping"]
 
-    if garment_config["vertex_group_mass"] is not None:
-        cloth_settings.vertex_group_mass = garment_config["vertex_group_mass"]
-        cloth_settings.pin_stiffness = garment_config["pin_stiffness"]
-    cloth_settings.shrink_min = garment_config["shrink_min"]
+    if cloth_config["vertex_group_mass"] is not None:
+        cloth_settings.vertex_group_mass = cloth_config["vertex_group_mass"]
+        cloth_settings.pin_stiffness = cloth_config["pin_stiffness"]
+    cloth_settings.shrink_min = cloth_config["shrink_min"]
 
-    collision_settings.collision_quality = garment_config["collision_quality"]
-    collision_settings.distance_min = garment_config["distance_min"]
-    collision_settings.use_self_collision = garment_config["use_self_collision"]
-    collision_settings.self_distance_min = garment_config["self_distance_min"]
+    collision_settings.collision_quality = cloth_config["collision_quality"]
+    collision_settings.distance_min = cloth_config["distance_min"]
+    collision_settings.use_self_collision = cloth_config["use_self_collision"]
+    collision_settings.self_distance_min = cloth_config["self_distance_min"]
 
 
 def bake_cloth(start_frame, end_frame):
@@ -207,6 +206,7 @@ def apply_deform(garment, surface_mod, proxy):
     Args:
         garment (bpy.types.Object): The garment object.
         surface_mod (bpy.types.Modifier): The surface deform modifier.
+        proxy (bpy.types.Object): The proxy object.
     """
     bpy.context.view_layer.objects.active = garment
     bpy.ops.object.modifier_apply(modifier=surface_mod.name)
@@ -219,9 +219,10 @@ def apply_deform(garment, surface_mod, proxy):
 
 def post_process(
     obj,
-    thickness,
-    seam_shrink,
-    levels,
+    seams_bevel=0.01,
+    shrink_seams=-0.01,
+    thickness=-0.01,
+    subdivisions=2,
 ):
     """Post-processes the garment by applying modifiers and modifying its geometry.
 
@@ -251,16 +252,16 @@ def post_process(
     bmesh.update_edit_mesh(obj.data)
 
     bpy.ops.mesh.bevel(
-        offset=0.01, offset_pct=0, segments=3, profile=0.5, affect="EDGES"
+        offset=seams_bevel, offset_pct=0, segments=3, profile=0.5, affect="EDGES"
     )
 
     bpy.ops.mesh.select_less()
-    bpy.ops.transform.shrink_fatten(value=seam_shrink, use_even_offset=True)
+    bpy.ops.transform.shrink_fatten(value=shrink_seams, use_even_offset=True)
 
     bmesh.update_edit_mesh(obj.data)
     bpy.ops.object.mode_set(mode="OBJECT")
 
     subdivide = obj.modifiers.new(name="Subdivide", type="SUBSURF")
-    subdivide.levels = levels
-    subdivide.render_levels = levels
+    subdivide.levels = subdivisions
+    subdivide.render_levels = subdivisions
     bpy.ops.object.modifier_apply(modifier="Subdivide")
