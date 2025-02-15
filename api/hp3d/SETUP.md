@@ -11,6 +11,7 @@ This is an easy setup guide for the HierarchicalProbabilistic3DHuman repository 
 
 Place the Files like this:
 
+```bash
     hp3d
     ├── model_files                                     # Folder with model files
     │   ├── smpl
@@ -26,6 +27,7 @@ Place the Files like this:
     │   ├── J_regressor_extra.npy                       # Extra joints regressor
     │   └── UV_Processed.mat                            # DensePose UV coordinates for SMPL mesh
     └── ...
+```
 
 ### Docker
 
