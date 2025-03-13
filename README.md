@@ -68,3 +68,7 @@ Domains:
 - `minio.localhost`: The MinIO server (API)
 - `console.localhost`: The MinIO server (Web-Console)
 - `api.localhost`: The VirtualFit API
+
+## Project Files
+
+The project files for the 3D clothing models can be downloaded [here](https://nextcloud.hof-university.de/s/tFB6DtDLdiTZtgW).
